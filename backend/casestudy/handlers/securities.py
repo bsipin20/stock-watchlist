@@ -21,7 +21,6 @@ def find_matching_securities(search):
             matches.append(security)
     return matches
 
-
 def get_securities():
     response = { 'last_updated': datetime.now(UTC_TIMEZONE).isoformat(), 'securities': securities }
     return jsonify(response)

@@ -37,6 +37,7 @@ def find_user_by_id(userId):
         if user['id'] == userId:
             return user
     return None
+
 def get_users_watch_list(userId):
     resp = jsonify(succes=True)
     resp.status_code = 200
