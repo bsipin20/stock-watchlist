@@ -2,7 +2,6 @@ from datetime import datetime
 from pytz import timezone
 from flask import jsonify, request
 
-
 utc_timezone = timezone('UTC')
 
 securities = [
