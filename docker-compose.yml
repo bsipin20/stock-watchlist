@@ -1,0 +1,50 @@
+version: '3'
+services:
+  # Flask web server
+  web:
+    image: web:local
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    hostname: web
+    command: python3 manage.py run
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  # Postgres
+  db:
+    image: postgres:15-alpine3.18
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  # Redis
+  redis:
+      image: redis:7-alpine3.18
+      hostname: redis
+
+  # React app
+  app:
+    image: app:local
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    volumes:
+      - ./client:/app/
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
+volumes:
+    postgres_data:
+
