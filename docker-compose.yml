@@ -7,7 +7,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     hostname: web
-    command: python3 manage.py run
+    command: flask run
     volumes:
       - ./backend:/app
     ports:
@@ -22,11 +22,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   # Redis
   redis:
