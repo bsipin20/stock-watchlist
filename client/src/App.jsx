@@ -107,10 +107,6 @@ function App() {
     setWatchlist(watchlist);
   }, []);
 
-  const handleWatchlistUpdate = () => {
-    setWatchlist(watchlist);
-  }
-
   return (
     <UserContext.Provider value={value}>
       <div className="app">
