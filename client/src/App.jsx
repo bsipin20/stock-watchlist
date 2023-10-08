@@ -44,6 +44,11 @@ function Search({onUpdate}) {
     setQuery(event.target.value);
   }
 
+  const onRemoveTickerFromSearchResults = (ticker) => {
+    const newSearchResults = searchResults["results"]["securities"].filter((stock) => stock.ticker !== ticker);
+    setSearchResults(newSearchResults);
+  }
+
   const handleSubmit = async(event) => {
     event.preventDefault();
 
@@ -73,7 +78,7 @@ function Search({onUpdate}) {
       </form>
       {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
       ? searchResults["results"]["securities"].map((stock, index) => (
-        <SearchResultStock onUpdate={onUpdate} ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
+        <SearchResultStock onUpdate={onUpdate} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
       )) : <p>Empty search</p>}
     </div>
   )

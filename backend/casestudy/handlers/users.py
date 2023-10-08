@@ -47,14 +47,14 @@ def get_users_watch_list(userId):
 def post_users_watch_list(userId):
     if request.method == 'POST':
         watch_list = request.get_json()
+        #TODO replace with real validator
+        #TODO replace with real queries
         ticker = watch_list['ticker']
         update = {}
         update['ticker'] = ticker
         update['name'] = 'New Company'
         update['last_price'] = 123.45
-        print(update)
         current_user_watch_list = find_user_by_id(userId)
-        print(current_user_watch_list)
         current_user_watch_list['watch_list'].append(update)
         resp = jsonify(success=True)
         resp.status_code = 200
