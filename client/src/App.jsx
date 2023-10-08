@@ -25,7 +25,6 @@ function Search() {
         headers: { 'Content-Type': 'application/json' }
       });
       const data = await response.json();
-      debugger;
       setSearchResults(data);
       console.info('Search loaded successfully');
     } catch (error) {
