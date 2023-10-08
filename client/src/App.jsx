@@ -3,49 +3,36 @@ import { LoginForm } from './LoginForm';
 import { UserContext } from './UserContext';
 import { useState, useCallback, useMemo, useContext, useEffect } from 'react';
 import { User } from "./User.jsx";
+import { Watchlist } from "./Watchlist";
 
 
-function Stock(props) {
-  return (
-    <div className='stock'>
-      <h3>{props.ticker}</h3>
-      <p>{props.name}</p>
-      <p>{props.last_price}</p>
-    </div>
-  )
-}
-
-function Watchlist(props) {
-  const {user} = useContext(UserContext);
-
-  if (!user) return null;
-  const [watchlist, setWatchlist] = useState([]);
+function Search() {
+  const [search, setSearch] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/v1/users/1/watch_list', {
+    fetch('http://localhost:8000/v1/securities/search?q=albert', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     })
     .then((response) => response.json())
     .then((data) => {
-      setWatchlist(data);
-      console.info('Watchlist loaded successfully');
+      setSearch(data);
+      console.info('Search loaded successfully');
     })
     .catch((error) => {
-      console.error('Unable to load watchlist', error);
+      console.error('Unable to load search', error);
     });
   }, []);
-  console.log(user);
 
   return (
-    <div className='watchlist'>
-      <h3>Watchlist</h3>
-      {("watch_list" in watchlist) && (watchlist["watch_list"] && watchlist["watch_list"].length)
-      ? watchlist["watch_list"].map((stock,index) => (
+    <div className='search'>
+      <h3>Search</h3>
+      {("search" in search) && (search["search"] && search["search"].length)
+      ? search["search"].map((stock,index) => (
         <Stock ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
-      )) : <p>Empty watchlist</p>}
+      )) : <p>Empty search</p>}
     </div>
   )
 }
@@ -55,13 +42,6 @@ function App() {
   const login = useCallback((u) => setUser(u), []);
   const logout = useCallback(() => setUser(null), []);
   const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
-  const stock_data = [
-    { 'ticker': 'AAPL', 'last_price': 100.00, 'name': "Apple Inc." },
-    { 'ticker': 'GOOG', 'last_price': 1000.00, 'name': "Alphabet Inc." },
-    { 'ticker': 'MSFT', 'last_price': 200.00, 'name': "Microsoft Corporation" },
-    { 'ticker': 'AMZN', 'last_price': 3000.00, 'name': "Amazon.com, Inc." }
-  ]
-
   return (
     <UserContext.Provider value={value}>
       <div className="app">
@@ -70,6 +50,11 @@ function App() {
           <h1>Albert stock watch</h1>
           <User />
         </header>
+        {user && (
+          <section>
+            <Search />
+          </section>
+        )}
         {user && (
           <section>
             <Watchlist />
