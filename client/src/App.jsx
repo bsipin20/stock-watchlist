@@ -7,30 +7,45 @@ import { Watchlist } from "./Watchlist";
 
 
 function Search() {
-  const [search, setSearch] = useState([]);
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetch('http://localhost:8000/v1/securities/search?q=albert', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then((response) => response.json())
-    .then((data) => {
-      setSearch(data);
+  const handleInputChange = (event) => {
+    setQuery(event.target.value);
+  }
+
+  const handleSubmit = async(event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetch(`http://localhost:8000/v1/securities/search?query=${query}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      debugger;
+      setSearchResults(data);
       console.info('Search loaded successfully');
-    })
-    .catch((error) => {
-      console.error('Unable to load search', error);
-    });
-  }, []);
+    } catch (error) {
+      console.errog('Error loading search', error);
+    }
+  };
 
   return (
     <div className='search'>
-      <h3>Search</h3>
-      {("search" in search) && (search["search"] && search["search"].length)
-      ? search["search"].map((stock,index) => (
+      <form onSubmit={ handleSubmit }>
+        <input
+          type="text"
+          id="search"
+          placeholder="Search"
+          value={query}
+          onChange={handleInputChange}
+          />
+      </form>
+      {("search" in searchResults) && (searchResults["search"] && searchResults["search"].length)
+      ? searchResults["search"].map((stock,index) => (
         <Stock ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
       )) : <p>Empty search</p>}
     </div>

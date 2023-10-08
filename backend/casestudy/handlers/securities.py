@@ -28,7 +28,7 @@ def get_securities():
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL
     if query == '':
-        print("NOTHING HERE")
+        return jsonify([])
     else:
         result = _find_matching_securities(query)
         if result:
