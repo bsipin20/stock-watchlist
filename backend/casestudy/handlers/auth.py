@@ -1,7 +1,13 @@
-user_data = [ {'id': 1, 'username': 'user1', 'password': 'user2'} ]
+from flask import request, jsonify
 
-def authenticate(username, password):
-    for user in user_data:
-        if user['username'] == username and user['password'] == password:
-            return user
-    return None
+user = {
+        'username': 'user',
+        'email': 'user@gmail.com',
+        'first_name': 'John',
+        'last_name': 'Doe',
+}
+
+
+def authenticate():
+    query = request.args.get('username', '')  # Get the 'query' parameter from the URL
+    return jsonify(user)
