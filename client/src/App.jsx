@@ -37,17 +37,18 @@ function Watchlist(props) {
       console.error('Unable to load watchlist', error);
     });
   }, []);
+  console.log(user);
 
   return (
     <div className='watchlist'>
       <h3>Watchlist</h3>
-      {watchlist["watch_list"].length ? watchlist["watch_list"].map((stock,index) => (
+      {("watch_list" in watchlist) && (watchlist["watch_list"] && watchlist["watch_list"].length)
+      ? watchlist["watch_list"].map((stock,index) => (
         <Stock ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
       )) : <p>Empty watchlist</p>}
     </div>
   )
 }
-
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,7 +61,6 @@ function App() {
     { 'ticker': 'MSFT', 'last_price': 200.00, 'name': "Microsoft Corporation" },
     { 'ticker': 'AMZN', 'last_price': 3000.00, 'name': "Amazon.com, Inc." }
   ]
-
 
   return (
     <UserContext.Provider value={value}>
