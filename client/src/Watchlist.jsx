@@ -12,28 +12,27 @@ function Stock(props) {
     )
 }
 
-export function Watchlist(props) {
+export function Watchlist({watchlist}) {
     const {user} = useContext(UserContext);
   
     if (!user) return null;
-    const [watchlist, setWatchlist] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+   // const [loading, setLoading] = useState(true);
+   // const [error, setError] = useState(null);
   
-    useEffect(() => {
-      fetch('http://localhost:8000/v1/users/1/watch_list', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        setWatchlist(data);
-        console.info('Watchlist loaded successfully');
-      })
-      .catch((error) => {
-        console.error('Unable to load watchlist', error);
-      });
-    }, []);
+    // useEffect(() => {
+    //   fetch('http://localhost:8000/v1/users/1/watch_list', {
+    //     method: 'GET',
+    //     headers: { 'Content-Type': 'application/json' }
+    //   })
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     handleUpdateWatchlist(data);
+    //     console.info('Watchlist loaded successfully');
+    //   })
+    //   .catch((error) => {
+    //     console.error('Unable to load watchlist', error);
+    //   });
+    // }, []);
   
     return (
       <div className='watchlist'>
