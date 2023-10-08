@@ -39,15 +39,23 @@ def find_user_by_id(userId):
     return None
 
 def get_users_watch_list(userId):
-    resp = jsonify(succes=True)
+    resp = jsonify(success=True)
     resp.status_code = 200
     response = find_user_by_id(userId)
     return jsonify(response)
 
-def post_users_watch_list(userId, ticker):
+def post_users_watch_list(userId):
     if request.method == 'POST':
-        # return 404 if cant find user
-        # return 204 if successful
+        watch_list = request.get_json()
+        ticker = watch_list['ticker']
+        update = {}
+        update['ticker'] = ticker
+        update['name'] = 'New Company'
+        update['last_price'] = 123.45
+        print(update)
+        current_user_watch_list = find_user_by_id(userId)
+        print(current_user_watch_list)
+        current_user_watch_list['watch_list'].append(update)
         resp = jsonify(success=True)
         resp.status_code = 200
         return resp
@@ -56,6 +64,4 @@ def post_users_watch_list(userId, ticker):
         resp = jsonify(success=True)
         resp.status_code = 200
         return resp
-    else:
-        "GOT HERE"
     return None
