@@ -11,7 +11,7 @@ export function LoginForm() {
   // Make call to backend server to login. Save user object to user context.
   const handleLogin = useCallback((event) => {
     event.preventDefault();
-    fetch('http://localhost:8000/login/', {
+    fetch('http://localhost:8000/v1/login/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username }),

@@ -14,7 +14,7 @@ securities = [
 
 UTC_TIMEZONE = timezone('UTC')
 
-def find_matching_securities(search):
+def _find_matching_securities(search):
     matches = []
     for security in securities:
         if search in security['ticker'].lower() or search in security['name'].lower():
@@ -30,7 +30,7 @@ def search_securities():
     if query == '':
         print("NOTHING HERE")
     else:
-        result = find_matching_securities(query)
+        result = _find_matching_securities(query)
         if result:
             return jsonify(result)
         return jsonify([])
