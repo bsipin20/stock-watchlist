@@ -1,12 +1,12 @@
 FROM python:3.11-alpine3.18
 
-WORKDIR /backend
+WORKDIR /app
 
-COPY requirements.txt /backend/
+COPY requirements.txt /app/
 
 RUN pip install -r requirements.txt
 
-COPY . /backend/
+COPY . /app/
 
 CMD python manage.py run
 

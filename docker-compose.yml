@@ -6,14 +6,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     hostname: web
-    command: flask run --host=0.0.0.0 --port 8000
+    command: python3 backend/manage.py
     volumes:
-      - ./backend:/app
+      - ".:/app:delegated"
     ports:
       - "8000:8000"
     depends_on:
       - db
       - redis
+    environment:
+      - FLASK_APP=backend/manage.py
 
   # Postgres
   db:
@@ -45,18 +47,21 @@ services:
       - "3000:3000"
 
   worker:
+    image: web:local
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    command: celery --app casestudy.tasks.celery worker --loglevel=info --logfile=casestudy/logs/celery.log
+    command: sh ./start_worker.sh
+      #celery --app casestudy.tasks.celery worker --loglevel=info
     volumes:
-      - ./backend:/app
+      - "./backend:/app"
     environment:
        - FLASK_DEBUG=1
        - APP_SETTINGS=casestudy.config.DevelopmentConfig
        - CELERY_BROKER_URL=redis://redis:6379/0
        - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
+      - db
       - web
       - redis
 
@@ -64,7 +69,7 @@ services:
      build: 
       context: ./backend
       dockerfile: Dockerfile
-     command: celery --app casestudy.tasks.celery flower --port=5555 --broker=redis://redis:6379/0
+     command: celery --app casestudy.tasks.celery_app --broker=redis://redis:6379/0 flower --port=5555
      ports:
       - 5556:5555
      environment:

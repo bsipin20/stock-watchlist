@@ -1,6 +1,8 @@
 from datetime import datetime
 from pytz import timezone
 from flask import jsonify, request
+from casestudy.database import Security
+from casestudy.extensions import db
 
 securities = [
     {'ticker': 'AAPL', 'name': 'Apple Inc.'},
@@ -22,9 +24,10 @@ def _find_matching_securities(search):
     return matches
 
 def get_securities():
-    response = { 'last_updated': datetime.now(UTC_TIMEZONE).isoformat(), 'securities': securities }
-    json_response = { 'results': response, success: True }
-    return jsonify(json_response)
+    securities = db.session.query(Security.name).distinct().all()
+    unique_securities = [security[0] for security in securities]
+    response_object = { 'results': unique_securities, 'success': True}
+    return jsonify(response_object)
 
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL
