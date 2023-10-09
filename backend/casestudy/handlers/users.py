@@ -1,5 +1,8 @@
 from flask import request, jsonify
 
+from casestudy.extensions import db
+from casestudy.database import Watchlist, Security
+
 user_data = [
     {  'id': 1, 
 
@@ -45,23 +48,29 @@ def get_users_watch_list(userId):
     return jsonify(response)
 
 def post_users_watch_list(userId):
-    if request.method == 'POST':
-        watch_list = request.get_json()
-        #TODO replace with real validator
-        #TODO replace with real queries
-        ticker = watch_list['ticker']
-        update = {}
-        update['ticker'] = ticker
-        update['name'] = 'New Company'
-        update['last_price'] = 123.45
-        current_user_watch_list = find_user_by_id(userId)
-        current_user_watch_list['watch_list'].append(update)
-        resp = jsonify(success=True)
-        resp.status_code = 200
-        return resp
-    elif request.method == 'DELETE':
-        # RETURN 404 if cant find
-        resp = jsonify(success=True)
-        resp.status_code = 200
-        return resp
-    return None
+    try:
+        request_json = request.get_json()
+        security_id = int(request_json['security_id'])
+    except ValueError:
+        return jsonify({'error': 'Invalid security_id'}), 400
+
+    # Validate security exists before adding to watchlist
+    if not Security.query.filter_by(id=security_id).first():
+        return jsonify({'error': 'Invalid security_id - Security not found'}), 400
+
+    # Check if the user_id and security_id combination already exists in the watchlist
+    existing_watchlist_entry = Watchlist.query.filter_by(user_id=userId, security_id=security_id).first()
+
+    if existing_watchlist_entry:
+        return jsonify({'message': 'Watchlist entry already exists for this user and security'}), 200
+
+    # Create a new watchlist entry
+    new_watchlist_entry = Watchlist(user_id=userId, security_id=security_id)
+
+    try:
+        db.session.add(new_watchlist_entry)
+        db.session.commit()
+        return jsonify({'message': 'Watchlist entry added successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

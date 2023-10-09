@@ -1,14 +1,6 @@
-from flask.cli import FlaskGroup
-from casestudy.app import start_app
+from casestudy.app import create_app
 
-#db = SQLAlchemy()
-#migrate = Migrate()
+app = create_app()
 
-
-#db.init_app(app)
-#migrate.init_app(app, db)
-
-#cli = FlaskGroup(create_app=start_app)
-
-#if __name__ == '__main__':
-#    cli()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000, debug=True)
