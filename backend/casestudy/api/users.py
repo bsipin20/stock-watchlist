@@ -4,49 +4,11 @@ from sqlalchemy.orm import joinedload
 from casestudy.extensions import db
 from casestudy.database import Watchlist, Security, SecurityPriceTracker
 
-user_data = [
-    {  'id': 1, 
-
-     'watch_list':  [
-        { 
-            'ticker': 'AAPL',
-            'name': 'Apple Inc.',
-            'last_price': '127.35'
-        },
-        {
-            'ticker': 'TSLA',
-            'name': 'Tesla Inc.',
-            'last_price': '609.89'
-        },
-        {
-            'ticker': 'MSFT',
-            'name': 'Microsoft Corporation',
-            'last_price': '249.07'
-        }
-        ]
-    },
-    { 'id': 2,
-     'watch_list':  [
-        { 
-            'ticker': 'AAPL',
-            'name': 'Apple Inc.',
-            'last_price': '127.35'
-        }
-        ]
-    }
-]
-
-def find_user_by_id(userId):
-    for user in user_data:
-        if user['id'] == userId:
-            return user
-    return None
-
 def get_users_watch_list(userId):
     user_watchlist = db.session.query(Watchlist).filter_by(user_id=userId).all()
     watchlist_info = []
 
-# Iterate through the watchlist and get the associated security details
+    # Iterate through the watchlist and get the associated security details
     for watchlist_item in user_watchlist:
         security_id = watchlist_item.security_id
 
