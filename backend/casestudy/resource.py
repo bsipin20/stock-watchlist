@@ -1,4 +1,5 @@
 import random
+import logging
 import string
 import requests
 import json
@@ -54,17 +55,15 @@ class TestAlbertStockClient(BaseStockClient):
         "BRK.A": random.uniform(1, 1000)
     }
     
-    def random_price_generator(self):
-        return random.uniform(1, 1000)
-
     def get_all_stocks(self):
         return self.STOCKS
 
     def get_stock_prices_by_tickers(self, tickers):
         result = {}
-        for i in self.STOCK_PRICES:
+        for i in self.STOCKS:
             if i in tickers:
-                result[i] = self.STOCK_PRICES[i]
+                result[i] = random.uniform(1,200)
+        logging.info(f'result: {result}')
         return result
 
 class AlbertStockClient(BaseStockClient):
@@ -91,4 +90,7 @@ class AlbertStockClient(BaseStockClient):
             time.sleep(self.retry_delay)
         print("Max retries exceeded. Unable to get stock prices by tickers.")
         return None
+
+response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(['AAPL', 'MSFT', 'TSLA'])
+print(response)
 

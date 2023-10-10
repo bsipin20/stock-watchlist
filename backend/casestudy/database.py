@@ -17,8 +17,9 @@ class Security(db.Model):
 
 class SecurityPriceTracker(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    security_id = db.Column(db.Integer, db.ForeignKey('security.id'), nullable=False)
+    security_id = db.Column(db.Integer, db.ForeignKey('security.id'), nullable=False, unique=True)
     last_price = db.Column(db.Float, nullable=False)
+    last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class Watchlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)

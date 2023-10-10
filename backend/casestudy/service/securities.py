@@ -1,4 +1,6 @@
 import logging
+import pytz
+from datetime import datetime
 
 from casestudy.extensions import db
 from casestudy.resource import TestAlbertStockClient
@@ -28,26 +30,37 @@ def update_security_prices():
     """
     Method to update security prices.
     """
+    # Fetch all securities and create a dictionary with security IDs as keys
+    securities = {security.id: security for security in db.session.query(Security).all()}
+    
     # Get unique security_ids from watchlist and join to get security tickers
     query = db.session.query(Watchlist.security_id, Security.ticker).\
         join(Security, Watchlist.security_id == Security.id).distinct()
 
     # Get a list of unique tickers
-    tickers = [ticker for security_id, ticker in query]
+    tickers = []
+    for row in query:
+        tickers.append(row.ticker)
+
+    logging.info(f'tickers: {tickers}')
 
     # Fetch the latest prices for all tickers using a single API call
     # Replace API_ENDPOINT and API_KEY with your actual endpoint and API key
     response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(tickers)
     logging.info(f'response: {response}')
 
-    # Assuming the response contains prices in a dictionary with tickers as keys
-    # Update the security price tracker table with the latest prices
-    for security_id, ticker in query.all():
-        last_price = response[ticker]
-        security_price = SecurityPriceTracker(security_id=security_id, last_price=last_price)
-        logging.info(f'security_price: {security_price}')
-        db.session.add(security_price)
-
+    # Update existing prices and create a list of new prices
+    updated_prices = []
+    for security_id, ticker in query:
+        if ticker in response:
+            security_price = SecurityPriceTracker.query.filter_by(security_id=security_id).one_or_none()
+            if security_price:
+                # Update the existing security price
+                security_price.last_price = response[ticker]
+                security_price.last_updated = datetime.utcnow()
+            else:
+            # Add a new entry for the security
+                db.session.add(SecurityPriceTracker(security_id=security_id, last_price=response[ticker], last_updated=datetime.utcnow()))
     # Commit the changes to the database
     db.session.commit()
     return True
