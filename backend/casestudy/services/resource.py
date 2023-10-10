@@ -8,6 +8,7 @@ import time
 from abc import ABCMeta, abstractmethod
 
 class BaseStockClient:
+    """ Client for getting stock prices from an external API"""
     def __init__(self, base_resource, max_retries=3, retry_delay = 1):
         self.base_resource = base_resource
         self.max_retries = retry_delay
@@ -47,14 +48,6 @@ class TestAlbertStockClient(BaseStockClient):
             "BRK.A": 'Berkshire Hathaway'
         }
 
-    STOCK_PRICES = {
-        "AAPL": random.uniform(1, 1000),
-        "GOOG": random.uniform(1, 1000),
-        "MSFT": random.uniform(1, 1000),
-        "AMZN": random.uniform(1, 1000),
-        "BRK.A": random.uniform(1, 1000)
-    }
-    
     def get_all_stocks(self):
         return self.STOCKS
 
@@ -90,7 +83,4 @@ class AlbertStockClient(BaseStockClient):
             time.sleep(self.retry_delay)
         print("Max retries exceeded. Unable to get stock prices by tickers.")
         return None
-
-response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(['AAPL', 'MSFT', 'TSLA'])
-print(response)
 
