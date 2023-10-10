@@ -21,18 +21,17 @@ def create_app(config_object=config.Config):
     CORS(app, resources={r'/*' : {'origins': "*"}}, supports_credentials=True)
     return app
 
+def register_extensions(app):
+    db.init_app(app)
+    migrate.init_app(app, db)
+    celery_init_app(app)
+    return None
+
 def celery_init_app(app) -> Celery:
     class FlaskTask(Task):
         def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
     celery_app = Celery(app.name, task_cls=FlaskTask)
-    #celery_app.config_from_object(app.config["CELERY"])
     celery_app.set_default()
     return celery_app
-
-def register_extensions(app):
-    db.init_app(app)
-    migrate.init_app(app, db)
-    celery_init_app(app)
-    return None
