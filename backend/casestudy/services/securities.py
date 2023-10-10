@@ -3,7 +3,7 @@ import pytz
 from datetime import datetime
 
 from casestudy.extensions import db
-from casestudy.resource import TestAlbertStockClient
+from casestudy.services.resource import TestAlbertStockClient
 from casestudy.database import Security, Watchlist, SecurityPriceTracker
 
 def update_security_table():

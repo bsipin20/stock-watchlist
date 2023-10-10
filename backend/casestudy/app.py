@@ -1,13 +1,15 @@
 import logging
-
-from casestudy.extensions import db, migrate
-from casestudy import routes, seeds, config
 from flask_cors import CORS
 from flask import Flask
 from celery.schedules import timedelta
 from celery import Celery, Task
-from casestudy import resource, database
+
+from casestudy import database
 from casestudy.extensions import db
+from casestudy.extensions import db, migrate
+from casestudy import config
+from casestudy.api import routes
+
 
 def create_app(config_object=config.Config):
     app = Flask(__name__.split('.')[0])

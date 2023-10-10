@@ -1,7 +1,5 @@
 from datetime import datetime
-from casestudy.handlers import securities
-from casestudy.handlers import users 
-from casestudy.handlers import auth
+from casestudy.api import securities, users, auth
 
 ROUTES = {
     '/v1/users/<int:userId>/watch_list': (users.get_users_watch_list, ['GET']),

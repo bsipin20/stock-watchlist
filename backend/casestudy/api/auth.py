@@ -7,7 +7,6 @@ user = {
         'last_name': 'Doe',
 }
 
-
 def authenticate():
     query = request.args.get('username', '')  # Get the 'query' parameter from the URL
     return jsonify(user)
