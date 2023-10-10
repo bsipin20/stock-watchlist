@@ -46,7 +46,9 @@ def create_task(arg):
 
 @celery_app.task(name="update_security_tickers")
 def update_security_tickers(arg):
-#    try:
+    """
+    Update the security tickers
+    """
     updated = update_security_table()
     if updated:
         logging.info(f'Updated security tickers')

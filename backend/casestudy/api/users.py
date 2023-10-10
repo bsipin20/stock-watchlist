@@ -5,6 +5,11 @@ from casestudy.extensions import db
 from casestudy.database import Watchlist, Security, SecurityPriceTracker
 
 def get_users_watch_list(userId):
+    """
+    Get the watchlist for a user
+    parameters:
+        userId (int): The user id
+    """
     user_watchlist = db.session.query(Watchlist).filter_by(user_id=userId).all()
     watchlist_info = []
 
@@ -33,6 +38,12 @@ def get_users_watch_list(userId):
     return jsonify(watchlist_info)
 
 def post_users_watch_list(userId):
+    """
+    Post a new watchlist entry for a user
+
+    parameters:
+        userId (int): The user id
+    """
     try:
         request_json = request.get_json()
         security_id = int(request_json['security_id'])

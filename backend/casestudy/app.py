@@ -10,7 +10,6 @@ from casestudy.extensions import db, migrate
 from casestudy import config
 from casestudy.api import routes
 
-
 def create_app(config_object=config.Config):
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
