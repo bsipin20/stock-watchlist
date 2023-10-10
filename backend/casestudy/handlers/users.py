@@ -1,7 +1,8 @@
 from flask import request, jsonify
 
+from sqlalchemy.orm import joinedload
 from casestudy.extensions import db
-from casestudy.database import Watchlist, Security
+from casestudy.database import Watchlist, Security, SecurityPriceTracker
 
 user_data = [
     {  'id': 1, 
@@ -42,10 +43,32 @@ def find_user_by_id(userId):
     return None
 
 def get_users_watch_list(userId):
-    resp = jsonify(success=True)
-    resp.status_code = 200
-    response = find_user_by_id(userId)
-    return jsonify(response)
+    user_watchlist = db.session.query(Watchlist).filter_by(user_id=userId).all()
+    watchlist_info = []
+
+# Iterate through the watchlist and get the associated security details
+    for watchlist_item in user_watchlist:
+        security_id = watchlist_item.security_id
+
+        # Retrieve the security details (ticker, name) and latest price
+        security_details = db.session.query(Security, SecurityPriceTracker.last_price).\
+            join(SecurityPriceTracker, SecurityPriceTracker.security_id == security_id).\
+            filter(Security.id == security_id).first()
+
+        if security_details:
+            security = security_details[0]
+            security_ticker = security.ticker
+            security_name = security.name
+            last_price = security_details[1]
+
+            # Append the information to the results list
+            watchlist_info.append({
+                "security_id": security_id,
+                "security_ticker": security_ticker,
+                "security_name": security_name,
+                "last_price": last_price
+            })
+    return jsonify(watchlist_info)
 
 def post_users_watch_list(userId):
     try:

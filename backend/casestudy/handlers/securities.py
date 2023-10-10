@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from pytz import timezone
 from flask import jsonify, request
@@ -24,10 +25,12 @@ def _find_matching_securities(search):
     return matches
 
 def get_securities():
-    securities = db.session.query(Security.name).distinct().all()
-    unique_securities = [security[0] for security in securities]
-    response_object = { 'results': unique_securities, 'success': True}
-    return jsonify(response_object)
+    securities = Security.query.all()
+    results = []
+    for security in securities:
+        logging.info(security)
+        results.append({ 'ticker': security.ticker, 'name': security.name, 'id': security.id})
+    return {'success': True, 'results': results}
 
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL

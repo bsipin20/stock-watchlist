@@ -51,12 +51,7 @@ def update_security_tickers(arg):
         logging.info(f'Updated security tickers')
     else:
         logging.error(f'Failed to update security tickers')
-#    except Exception as e:
-#        logging.warning(f'Exception: {e}')
-#        raise e
-#        return False
-#    return True
-
+    return True
 
 @after_setup_logger.connect
 def setup_loggers(logger, *args, **kwargs):
