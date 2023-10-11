@@ -1,4 +1,7 @@
+import sys
+
 from flask import request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from sqlalchemy.orm import joinedload
 from casestudy.extensions import db
@@ -18,7 +21,7 @@ def get_users_watch_list(userId):
         security_id = watchlist_item.security_id
 
         # Retrieve the security details (ticker, name) and latest price
-        security_details = db.session.query(Security, SecurityPriceTracker.last_price).\
+        security_details = db.session.query(Security, SecurityPriceTracker.last_price, SecurityPriceTracker.last_updated).\
             join(SecurityPriceTracker, SecurityPriceTracker.security_id == security_id).\
             filter(Security.id == security_id).first()
 
@@ -27,16 +30,19 @@ def get_users_watch_list(userId):
             security_ticker = security.ticker
             security_name = security.name
             last_price = security_details[1]
+            last_updated = security_details[2]
 
             # Append the information to the results list
             watchlist_info.append({
                 "security_id": security_id,
                 "security_ticker": security_ticker,
                 "security_name": security_name,
-                "last_price": last_price
+                "last_price": last_price,
+                "last_updated": last_updated
             })
     return jsonify(watchlist_info)
 
+@jwt_required()
 def post_users_watch_list(userId):
     """
     Post a new watchlist entry for a user
@@ -44,6 +50,10 @@ def post_users_watch_list(userId):
     parameters:
         userId (int): The user id
     """
+    current_user = get_jwt_identity()
+    if current_user != userId:
+        return jsonify({'error': 'Invalid user'}), 400
+
     try:
         request_json = request.get_json()
         security_id = int(request_json['security_id'])
