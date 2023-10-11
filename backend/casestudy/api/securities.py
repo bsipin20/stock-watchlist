@@ -50,7 +50,7 @@ class SecuritySearchResponse(BaseModel):
     success: bool
     error: str = None
 
-#@jwt_required()
+@jwt_required()
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL
     if query == '':
