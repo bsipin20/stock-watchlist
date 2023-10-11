@@ -19,20 +19,13 @@ class User(db.Model):
 
     @password.setter
     def password(self, password):
-        # Hash the password before storing it
         self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
-        # Verify the hashed password
         return check_password_hash(self.password_hash, password)
 
     @validates('username')
     def validate_username(self, key, username):
-        # Perform any username validation if needed
-        # For example, ensure it's a valid format
-        # You can customize this validation based on your requirements
-        # This is a simple example, and you can expand on it
-        # For now, we'll just check if the length is at least 3 characters
         if len(username) < 3:
             raise ValueError('Username must be at least 3 characters long')
         return username
