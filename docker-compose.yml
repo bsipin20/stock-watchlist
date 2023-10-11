@@ -6,7 +6,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     hostname: web
-    command: python3 backend/manage.py
+    command: python3 backend/manage.py --debug
     volumes:
       - ".:/app:delegated"
     ports:
@@ -15,7 +15,7 @@ services:
       - db
       - redis
     environment:
-      - FLASK_APP=backend/manage.py
+      - FLASK_APP=backend/manage.py 
 
   # Postgres
   db:

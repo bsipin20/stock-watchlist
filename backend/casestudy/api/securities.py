@@ -1,28 +1,16 @@
 import logging
 from datetime import datetime
 from pytz import timezone
+from typing import List, Dict
+from dataclasses import dataclass
 from flask import jsonify, request
+from flask_jwt_extended import jwt_required
+from pydantic import BaseModel
+
 from casestudy.database import Security
 from casestudy.extensions import db
 
-securities = [
-    {'ticker': 'AAPL', 'name': 'Apple Inc.'},
-    {'ticker': 'MSFT', 'name': 'Microsoft Corporation'},
-    {'ticker': 'TSLA', 'name': 'Tesla Inc.'},
-    {'ticker': 'GOOG', 'name': 'Alphabet Inc.'},
-    {'ticker': 'AMZN', 'name': 'Amazon.com Inc.'},
-    {'ticker': 'FB', 'name': 'Facebook Inc.'},
-    {'ticker': 'BRK.A', 'name': 'Berkshire Hathaway Inc.'}
-]
-
 UTC_TIMEZONE = timezone('UTC')
-
-def _find_matching_securities(search):
-    matches = []
-    for security in securities:
-        if search.lower() in security['ticker'].lower() or search.lower() in security['name'].lower():
-            matches.append(security)
-    return matches
 
 def get_securities():
     securities = Security.query.all()
@@ -43,4 +31,35 @@ def search_securities():
             response = { 'results': { 'securities': result }, 'success': True }
             print(response)
             return jsonify(response)
+        return jsonify([])
+
+def _find_matching_securities(query):
+    securities = db.session.query(Security).filter(
+        (Security.name.ilike(f'%{query}%')) | (Security.ticker.ilike(f'%{query}%'))
+    ).all()
+    return securities
+
+@dataclass
+class SecurityDTO:
+    id: int
+    ticker: str
+    name: str
+
+class SecuritySearchResponse(BaseModel):
+    results: Dict[str, List[SecurityDTO]]
+    success: bool
+    error: str = None
+
+@jwt_required()
+def search_securities():
+    query = request.args.get('query', '')  # Get the 'query' parameter from the URL
+    if query == '':
+        repsonse = SecuritySearchResponse(results=[], success=True) 
+        return jsonify(repsonse.dict()), 200
+    else:
+        result = _find_matching_securities(query)
+        if result:
+            securities = [SecurityDTO(id=sec.id, ticker=sec.ticker, name=sec.name) for sec in result]
+            response = SecuritySearchResponse(results={'securities': securities}, success=True)
+            return jsonify(response.dict())
         return jsonify([])

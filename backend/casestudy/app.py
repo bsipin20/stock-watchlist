@@ -1,6 +1,7 @@
 import logging
 from flask_cors import CORS
 from flask import Flask
+from flask_jwt_extended import create_access_token, JWTManager, jwt_required, set_access_cookies
 from celery.schedules import timedelta
 from celery import Celery, Task
 
@@ -23,8 +24,14 @@ def create_app(config_object=config.Config):
 def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
+    register_auth(app)
     celery_init_app(app)
     return None
+
+def register_auth(app):
+    jwt = JWTManager(app)
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    app.config["JWT_SECRET_KEY"] = "super-secret" #TODO move to config
 
 def celery_init_app(app) -> Celery:
     class FlaskTask(Task):
