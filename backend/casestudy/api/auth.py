@@ -38,11 +38,6 @@ def login():
     else:
         return jsonify({"msg": "Bad username or password"}), 401
 
-def logout():
-    response = jsonify({"msg": "logout successful"})
-    unset_jwt_cookies(response)
-    return response
-
 def register():
     data = request.form
     username = data.get('username')
