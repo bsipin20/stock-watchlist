@@ -10,8 +10,8 @@ export function User() {
     <div className='user'>
       <h3>
         Welcome, {
-          (user.first_name && user.last_name)
-            ? `${user.first_name} ${user.last_name}`
+          (user.username)
+            ? `${user.name}` 
             : user.email
         }!
       </h3>

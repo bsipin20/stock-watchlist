@@ -5,13 +5,6 @@ from flask import request, jsonify
 from casestudy.extensions import db
 from casestudy.database import User
 
-from flask_jwt_extended import (
-    create_access_token,
-    jwt_required,
-    set_access_cookies,
-    unset_jwt_cookies,
-)
-
 user = {
         'username': 'user',
         'email': 'user@gmail.com',
@@ -19,24 +12,13 @@ user = {
         'last_name': 'Doe',
 }
 
-@jwt_required(locations=['headers'])
-def test_protected_route():
-    return jsonify({'msg': 'You are authorized to view this page!'})        
-
 def login():
-    data = request.form
+    data = request.get_json()
     username = data.get('username')
-    password = data.get('password')
-    if not username or not password:
-        return jsonify({"msg": "Missing username or password"}), 401
     user = User.query.filter_by(username=username).first()
-    if user and user.verify_password(password):
-        response = jsonify({"msg": "login successful"})
-        access_token = create_access_token(identity=user.id)
-        set_access_cookies(response, access_token)
-        return response, 200
-    else:
-        return jsonify({"msg": "Bad username or password"}), 401
+    response = jsonify({"result": { "userId": user.id, "username": user.username}, "success": True})
+
+    return response, 200
 
 def register():
     data = request.form
@@ -63,7 +45,4 @@ def register():
         raise e
         # Handle other exceptions
         return jsonify({"error": str(e)}), 500
- 
-
-
     return jsonify({"msg": "register successful"})

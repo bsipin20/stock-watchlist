@@ -1,19 +1,19 @@
 import './App.css';
+
 import { LoginForm } from './LoginForm';
 import { UserContext } from './UserContext';
 import { useState, useCallback, useMemo, useContext, useEffect } from 'react';
 import { User } from "./User.jsx";
 import { Watchlist } from "./Watchlist";
 import { on } from 'events';
-
-
 function SearchResultStock(props) {
-
   const [ticker, setTicker] = useState(props.ticker); 
+  const { user, logout } = useContext(UserContext);
+
   const onAddToWatchlist = async(event) => {
     event.preventDefault();
     try {
-      const response = await fetch(`http://localhost:8000/v1/users/1/watch_list/`, {
+      const response = await fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker: props.ticker }),
@@ -22,7 +22,7 @@ function SearchResultStock(props) {
       console.info('Added to watchlist successfully');
       props.onUpdate();
     } catch (error) {
-      console.errog('Error adding to watchlist', error);
+      console.error('Error adding to watchlist', error);
     }
   }
 
@@ -35,6 +35,7 @@ function SearchResultStock(props) {
 }
 
 function Search({onUpdate}) {
+  const { user, logout } = useContext(UserContext);
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,52 +85,56 @@ function Search({onUpdate}) {
   )
 }
 
-function App() {
-  const [user, setUser] = useState(null);
+function Content() {
   const [watchlist, setWatchlist] = useState([]);
-  const login = useCallback((u) => setUser(u), []);
-  const logout = useCallback(() => setUser(null), []);
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+  const {user} = useContext(UserContext);
 
-  const fetchWatchlist = () => {
-    {
-      fetch('http://localhost:8000/v1/users/1/watch_list', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        setWatchlist(data);
-        console.info('Watchlist loaded successfully');
-      })
-      .catch((error) => {
-        console.error('Unable to load watchlist', error);
-      });
-    }
-  };
-  useEffect(() => {
-    fetchWatchlist();
-    setWatchlist(watchlist);
+  return(
+    <section>
+      <Watchlist watchlist={watchlist} setWatchlist={setWatchlist} />
+    </section>
+  )
+        
+
+}
+
+function App() {
+ const [user, setUser] = useState(null);
+
+  const login = useCallback((u) => {
+    setUser(u);
+    localStorage.setItem('user', JSON.stringify(u));  // Save user to localStorage
   }, []);
 
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('user');  // Remove user from localStorage on logout
+  }, []);
+
+  useEffect(() => {
+    // Retrieve user from localStorage on component mount
+    const savedUser = JSON.parse(localStorage.getItem('user'));
+    if (savedUser) {
+      setUser(savedUser);
+    }
+  }, []);
+
+  const userContextValue = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+
   return (
-    <UserContext.Provider value={value}>
+    <UserContext.Provider value={userContextValue}>
       <div className="app">
-        <LoginForm />
+        <LoginForm onLogin ={login}/>
         <header>
           <h1>Albert stock watch</h1>
           <User />
         </header>
         {user && (
           <section>
-            <Search onUpdate={fetchWatchlist}/>
+            <Search />
           </section>
         )}
-        {user && (
-          <section>
-            <Watchlist watchlist={watchlist}/>
-          </section>
-        )}
+        {user && <Content />}
       </div>
     </UserContext.Provider>
   );

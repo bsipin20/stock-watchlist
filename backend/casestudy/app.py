@@ -6,8 +6,7 @@ from celery.schedules import timedelta
 from celery import Celery, Task
 
 from casestudy import database
-from casestudy.extensions import db
-from casestudy.extensions import db, migrate
+from casestudy.extensions import db, migrate, socketio
 from casestudy import config
 from casestudy.api import routes
 
@@ -18,7 +17,7 @@ def create_app(config_object=config.Config):
     for url in routes.ROUTES:
         app.add_url_rule(url, view_func=routes.ROUTES[url][0], methods=routes.ROUTES[url][1])    
     register_extensions(app)
-    CORS(app, resources={r'/*' : {'origins': "*"}}, supports_credentials=True)
+    CORS(app, resources={r"*": {"origins": "http://localhost:3000"}})  # Allow only http://localhost:3000
     return app
 
 def register_extensions(app):
@@ -38,6 +37,8 @@ def celery_init_app(app) -> Celery:
         def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
-    celery_app = Celery(app.name, task_cls=FlaskTask)
+    celery_app = Celery(app.name, task_cls=FlaskTask, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
+    socketio.init_app(app, message_queue=app.config['CELERY_BROKER_URL'])
     celery_app.set_default()
     return celery_app
+

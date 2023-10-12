@@ -1,10 +1,9 @@
 import sys
 
 from flask import request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from sqlalchemy.orm import joinedload
-from casestudy.extensions import db
+from casestudy.extensions import db, socketio, redis_client
 from casestudy.database import Watchlist, Security, SecurityPriceTracker
 
 def get_users_watch_list(userId):
@@ -16,11 +15,9 @@ def get_users_watch_list(userId):
     user_watchlist = db.session.query(Watchlist).filter_by(user_id=userId).all()
     watchlist_info = []
 
-    # Iterate through the watchlist and get the associated security details
     for watchlist_item in user_watchlist:
         security_id = watchlist_item.security_id
 
-        # Retrieve the security details (ticker, name) and latest price
         security_details = db.session.query(Security, SecurityPriceTracker.last_price, SecurityPriceTracker.last_updated).\
             join(SecurityPriceTracker, SecurityPriceTracker.security_id == security_id).\
             filter(Security.id == security_id).first()
@@ -32,7 +29,6 @@ def get_users_watch_list(userId):
             last_price = security_details[1]
             last_updated = security_details[2]
 
-            # Append the information to the results list
             watchlist_info.append({
                 "security_id": security_id,
                 "security_ticker": security_ticker,
@@ -40,9 +36,10 @@ def get_users_watch_list(userId):
                 "last_price": last_price,
                 "last_updated": last_updated
             })
-    return jsonify(watchlist_info)
+    response = { 'success': True, 'result': { 'watch_list': watchlist_info } }
+    return jsonify(response), 200
 
-@jwt_required()
+
 def post_users_watch_list(userId):
     """
     Post a new watchlist entry for a user
@@ -50,10 +47,6 @@ def post_users_watch_list(userId):
     parameters:
         userId (int): The user id
     """
-    current_user = get_jwt_identity()
-    if current_user != userId:
-        return jsonify({'error': 'Invalid user'}), 400
-
     try:
         request_json = request.get_json()
         security_id = int(request_json['security_id'])
@@ -80,3 +73,20 @@ def post_users_watch_list(userId):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+@socketio.on('connect', namespace='/v1/users/connect_watchlist/')
+def user_connect(user_id):
+    print(f'TRYING TO ESTABLISH WebSocket connected for user {user_id}', file=sys.stderr)
+    user_id = request.args.get('user_id')
+    if user_id:
+        socketio.join_room(request.sid, room=user_id)
+        redis_client.set(f'users_in_room:room_name:{user_id}', request.sid)
+        print(f'WebSocket connected for user {user_id}')
+
+@socketio.on('disconnect', namespace='/v1/users/connect_watchlist/')
+def user_disconnect(user_id):
+    user_id = request.args.get('user_id')
+    if user_id:
+        redis_client.delete(f'users_in_room:room_name:{user_id}')
+        print(f'WebSocket disconnected for user {user_id}')

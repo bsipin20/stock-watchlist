@@ -31,8 +31,10 @@ services:
 
   # Redis
   redis:
-      image: redis:7-alpine3.18
-      hostname: redis
+    image: redis:7-alpine3.18
+    hostname: redis
+    ports:
+      - "6379:6379"
 
   # React app
   app:

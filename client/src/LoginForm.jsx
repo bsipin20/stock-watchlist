@@ -8,6 +8,7 @@ export function LoginForm() {
   // Form control.
   const [username, setUsername] = useState('');
 
+
   // Make call to backend server to login. Save user object to user context.
   const handleLogin = useCallback((event) => {
     event.preventDefault();
@@ -18,8 +19,7 @@ export function LoginForm() {
     })
     .then((response) => response.json())
     .then((data) => {
-      login(data);
-      console.info('Logged in successfully');
+      login(data['result']);
     })
     .catch((error) => {
       console.error('Unable to login', error);
