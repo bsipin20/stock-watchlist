@@ -6,6 +6,7 @@ import { useState, useCallback, useMemo, useContext, useEffect } from 'react';
 import { User } from "./User.jsx";
 import { Watchlist } from "./Watchlist";
 import { on } from 'events';
+
 function SearchResultStock(props) {
   const [ticker, setTicker] = useState(props.ticker); 
   const { user, logout } = useContext(UserContext);

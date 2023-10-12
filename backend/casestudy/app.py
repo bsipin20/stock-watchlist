@@ -6,7 +6,7 @@ from celery.schedules import timedelta
 from celery import Celery, Task
 
 from casestudy import database
-from casestudy.extensions import db, migrate, socketio
+from casestudy.extensions import db, migrate
 from casestudy import config
 from casestudy.api import routes
 
@@ -38,7 +38,6 @@ def celery_init_app(app) -> Celery:
             with app.app_context():
                 return self.run(*args, **kwargs)
     celery_app = Celery(app.name, task_cls=FlaskTask, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
-    socketio.init_app(app, message_queue=app.config['CELERY_BROKER_URL'])
     celery_app.set_default()
     return celery_app
 

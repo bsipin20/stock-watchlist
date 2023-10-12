@@ -2,7 +2,7 @@ import logging
 import pytz
 from datetime import datetime
 
-from casestudy.extensions import db
+from casestudy.extensions import db, redis_client
 from casestudy.services.resource import TestAlbertStockClient
 from casestudy.database import Security, Watchlist, SecurityPriceTracker
 
@@ -47,20 +47,21 @@ def update_security_prices():
     # Fetch the latest prices for all tickers using a single API call
     # Replace API_ENDPOINT and API_KEY with your actual endpoint and API key
     response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(tickers)
-    logging.info(f'response: {response}')
+    prefixed_stock_prices = {f'stock_prices:{symbol}': price for symbol, price in stock_prices.items()}
 
     # Update existing prices and create a list of new prices
     updated_prices = []
-    for security_id, ticker in query:
-        if ticker in response:
-            security_price = SecurityPriceTracker.query.filter_by(security_id=security_id).one_or_none()
-            if security_price:
-                # Update the existing security price
-                security_price.last_price = response[ticker]
-                security_price.last_updated = datetime.utcnow()
-            else:
-            # Add a new entry for the security
-                db.session.add(SecurityPriceTracker(security_id=security_id, last_price=response[ticker], last_updated=datetime.utcnow()))
+    redis_client.set(f'stock_prices:updated_at:{datetime.now(pytz.utc)}')
+    redis_client.mset(prefixed_stock_prices)
+
+     #       security_price = SecurityPriceTracker.query.filter_by(security_id=security_id).one_or_none()
+     #       if security_price:
+     #           # Update the existing security price
+     #           security_price.last_price = response[ticker]
+     #           security_price.last_updated = datetime.utcnow()
+     #       else:
+     #       # Add a new entry for the security
+     #           db.session.add(SecurityPriceTracker(security_id=security_id, last_price=response[ticker], last_updated=datetime.utcnow()))
     # Commit the changes to the database
-    db.session.commit()
+#    db.session.commit()
     return True

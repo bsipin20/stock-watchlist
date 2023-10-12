@@ -5,5 +5,4 @@ import redis
 
 db = SQLAlchemy()
 migrate = Migrate()
-socketio = SocketIO()
 redis_client = redis.Redis(host='redis', port=6379, db=0)

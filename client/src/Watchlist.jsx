@@ -8,7 +8,6 @@ function Stock(props) {
     return (
       <div className='stock'>
         <h3>{props.ticker}</h3>
-        <p>{props.name}</p>
         <p>{props.last_price}</p>
       </div>
     )
@@ -37,7 +36,9 @@ export function Watchlist({watchlist, setWatchlist, socket}) {
       }
     };
     useEffect(() => {
+      setInterval(() => {
       fetchWatchlist();
+      }, 5000);
     }, []); 
 
     if (!user) return null;
@@ -62,10 +63,11 @@ export function Watchlist({watchlist, setWatchlist, socket}) {
     return (
       <div className='watchlist'>
         <h3>Watchlist</h3>
-        {("watch_list" in watchlist) && (watchlist["watch_list"] && watchlist["watch_list"].length)
-        ? watchlist["watch_list"].map((stock,index) => (
-          <Stock ticker={stock.security_ticker} last_price={stock.last_price} name={stock.security_name} />
-        )) : <p>Empty watchlist</p>}
+        {("stock_prices" in watchlist) && (watchlist["stock_prices"] && watchlist["stock_prices"].length)
+        ? 
+        watchlist["stock_prices"].map((stock, index) => (
+          <Stock ticker={stock.ticker} last_price={stock.price} />
+        )) : <p>No stocks in watchlist</p>}
       </div>
     )
   }

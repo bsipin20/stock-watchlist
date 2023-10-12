@@ -3,7 +3,7 @@ import sys
 from flask import request, jsonify
 
 from sqlalchemy.orm import joinedload
-from casestudy.extensions import db, socketio, redis_client
+from casestudy.extensions import db, redis_client
 from casestudy.database import Watchlist, Security, SecurityPriceTracker
 
 def get_users_watch_list(userId):
@@ -12,31 +12,16 @@ def get_users_watch_list(userId):
     parameters:
         userId (int): The user id
     """
-    user_watchlist = db.session.query(Watchlist).filter_by(user_id=userId).all()
-    watchlist_info = []
-
-    for watchlist_item in user_watchlist:
-        security_id = watchlist_item.security_id
-
-        security_details = db.session.query(Security, SecurityPriceTracker.last_price, SecurityPriceTracker.last_updated).\
-            join(SecurityPriceTracker, SecurityPriceTracker.security_id == security_id).\
-            filter(Security.id == security_id).first()
-
-        if security_details:
-            security = security_details[0]
-            security_ticker = security.ticker
-            security_name = security.name
-            last_price = security_details[1]
-            last_updated = security_details[2]
-
-            watchlist_info.append({
-                "security_id": security_id,
-                "security_ticker": security_ticker,
-                "security_name": security_name,
-                "last_price": last_price,
-                "last_updated": last_updated
-            })
-    response = { 'success': True, 'result': { 'watch_list': watchlist_info } }
+    # Use a SQL join to fetch ticker symbols for the specified user_id
+    ticker_symbols = db.session.query(Security.ticker).join(Watchlist, Watchlist.security_id == Security.id).filter(Watchlist.user_id == userId).all()
+    
+    # Extract ticker symbols from the query result
+    ticker_symbols = [symbol for (symbol,) in ticker_symbols]
+    stock_price_bytes = redis_client.mget(ticker_symbols)
+    stock_prices = [{'ticker': symbol, 'price': float(price) if price else None} for symbol, price in zip(ticker_symbols, stock_price_bytes)]
+    last_updated = redis_client.get(f'stock_prices:updated_at')
+    result = { 'last_updated': last_updated, 'stock_prices': stock_prices }
+    response = { 'success': True , 'result': result }
     return jsonify(response), 200
 
 
@@ -74,19 +59,3 @@ def post_users_watch_list(userId):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-
-@socketio.on('connect', namespace='/v1/users/connect_watchlist/')
-def user_connect(user_id):
-    print(f'TRYING TO ESTABLISH WebSocket connected for user {user_id}', file=sys.stderr)
-    user_id = request.args.get('user_id')
-    if user_id:
-        socketio.join_room(request.sid, room=user_id)
-        redis_client.set(f'users_in_room:room_name:{user_id}', request.sid)
-        print(f'WebSocket connected for user {user_id}')
-
-@socketio.on('disconnect', namespace='/v1/users/connect_watchlist/')
-def user_disconnect(user_id):
-    user_id = request.args.get('user_id')
-    if user_id:
-        redis_client.delete(f'users_in_room:room_name:{user_id}')
-        print(f'WebSocket disconnected for user {user_id}')
