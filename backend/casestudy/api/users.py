@@ -16,7 +16,7 @@ def get_users_watch_list(userId):
     ticker_symbols = db.session.query(Security.ticker).join(Watchlist, Watchlist.security_id == Security.id).filter(Watchlist.user_id == userId).all()
     
     # Extract ticker symbols from the query result
-    ticker_symbols = [symbol for (symbol,) in ticker_symbols]
+    ticker_symbols = [f'stock_prices:{symbol}' for (symbol,) in ticker_symbols]
     stock_price_bytes = redis_client.mget(ticker_symbols)
     stock_prices = [{'ticker': symbol, 'price': float(price) if price else None} for symbol, price in zip(ticker_symbols, stock_price_bytes)]
     last_updated = redis_client.get(f'stock_prices:updated_at')
