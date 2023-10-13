@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime
 from pytz import timezone
 from typing import List, Dict
@@ -8,17 +9,15 @@ from flask_jwt_extended import jwt_required
 from pydantic import BaseModel
 
 from casestudy.database import Security
-from casestudy.extensions import db
+from casestudy.extensions import db, redis_client
 
 UTC_TIMEZONE = timezone('UTC')
 
-def get_securities():
-    securities = Security.query.all()
-    results = []
-    for security in securities:
-        logging.info(security)
-        results.append({ 'ticker': security.ticker, 'name': security.name, 'id': security.id})
-    return {'success': True, 'results': results}
+def get_securities(securityId):
+    security = Security.query.filter_by(id=securityId).first()
+    security_dict = redis_client.hgetall(f'stock_info:{str(security.ticker).lower()}')
+    decoded_data = {key.decode(): value.decode() for key, value in security_dict.items()}
+    return { 'success': True, 'data': decoded_data }
 
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL

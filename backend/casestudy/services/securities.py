@@ -54,8 +54,6 @@ def update_security_prices():
 
     for security_dict in security_dicts:
         security_dict['last_price'] = response[security_dict['ticker']]
-        print(security_dict, file=sys.stderr)
         redis_key = f'stock_info:{security_dict["ticker"]}'
-        print(redis_key.rstrip().lower(), file=sys.stderr)
         redis_client.hmset(redis_key.rstrip().lower(), security_dict)
     return True
