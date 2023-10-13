@@ -83,4 +83,3 @@ class AlbertStockClient(BaseStockClient):
             time.sleep(self.retry_delay)
         print("Max retries exceeded. Unable to get stock prices by tickers.")
         return None
-

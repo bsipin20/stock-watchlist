@@ -5,7 +5,6 @@ import { UserContext } from './UserContext';
 import { useState, useCallback, useMemo, useContext, useEffect } from 'react';
 import { User } from "./User.jsx";
 import { Watchlist } from "./Watchlist";
-import { on } from 'events';
 
 function SearchResultStock(props) {
   const [ticker, setTicker] = useState(props.ticker); 
@@ -17,15 +16,16 @@ function SearchResultStock(props) {
       const response = await fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: props.ticker }),
+        body: JSON.stringify({ security_id: props.id }),
       });
       const data = await response.json();
       console.info('Added to watchlist successfully');
-      props.onUpdate();
+//      props.onUpdate();
     } catch (error) {
       console.error('Error adding to watchlist', error);
     }
   }
+
 
   return (
     <div className='stock'>
@@ -67,6 +67,7 @@ function Search({onUpdate}) {
     }
   };
 
+
   return (
     <div className='search'>
       <form onSubmit={ handleSubmit }>
@@ -80,7 +81,7 @@ function Search({onUpdate}) {
       </form>
       {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
       ? searchResults["results"]["securities"].map((stock, index) => (
-        <SearchResultStock onUpdate={onUpdate} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} last_price={stock.last_price} name={stock.name} />
+        <SearchResultStock onUpdate={onUpdate} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
     </div>
   )
@@ -112,13 +113,13 @@ function App() {
     localStorage.removeItem('user');  // Remove user from localStorage on logout
   }, []);
 
-  useEffect(() => {
-    // Retrieve user from localStorage on component mount
-    const savedUser = JSON.parse(localStorage.getItem('user'));
-    if (savedUser) {
-      setUser(savedUser);
-    }
-  }, []);
+ // useEffect(() => {
+ //   // Retrieve user from localStorage on component mount
+ //   const savedUser = JSON.parse(localStorage.getItem('user'));
+ //   if (savedUser) {
+ //     setUser(savedUser);
+ //   }
+  //}, []);
 
   const userContextValue = useMemo(() => ({ user, login, logout }), [user, login, logout]);
 
