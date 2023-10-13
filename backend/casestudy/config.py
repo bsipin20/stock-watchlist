@@ -16,3 +16,5 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASS}@db:{DB_PORT}/{DB_NAME}'
    # SQLALCHEMY_DATABASE_URI = f'postgresql://user:password@localhost:{DB_PORT}/database1'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CELERY_BROKER_URL = 'redis://redis:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://redis:6379/0'

@@ -6,5 +6,6 @@ export default defineConfig({
       port: 3000,
       host: true,
   },
+	optimizeDeps: { include: ['socket.io-client'] },
   plugins: [react()],
 });

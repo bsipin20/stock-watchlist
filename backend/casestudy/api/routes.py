@@ -9,5 +9,4 @@ ROUTES = {
     '/v1/login/': (auth.login, ['POST']),
     '/v1/logout/': (auth.login, ['POST']),
     '/v1/register/': (auth.register, ['POST']),
-    '/v1/test/' : (auth.test_protected_route, ['GET'])
 }

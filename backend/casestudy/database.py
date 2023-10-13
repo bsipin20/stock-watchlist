@@ -30,18 +30,18 @@ class User(db.Model):
             raise ValueError('Username must be at least 3 characters long')
         return username
 
-class Security(db.Model):
-    """Model for a security"""
-    id = db.Column(db.Integer, primary_key=True)
-    ticker = db.Column(db.String(10), unique=True)
-    name = db.Column(db.String(64), unique=True)
-
 class SecurityPriceTracker(db.Model):
     """Model for tracking the price of a security"""
     id = db.Column(db.Integer, primary_key=True)
     security_id = db.Column(db.Integer, db.ForeignKey('security.id'), nullable=False, unique=True)
     last_price = db.Column(db.Float, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class Security(db.Model):
+    """Model for a security"""
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String(10), unique=True)
+    name = db.Column(db.String(64), unique=True)
 
 class Watchlist(db.Model):
     """Model for a watchlist entry"""

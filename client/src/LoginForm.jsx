@@ -18,8 +18,7 @@ export function LoginForm() {
     })
     .then((response) => response.json())
     .then((data) => {
-      login(data);
-      console.info('Logged in successfully');
+      login(data['result']);
     })
     .catch((error) => {
       console.error('Unable to login', error);

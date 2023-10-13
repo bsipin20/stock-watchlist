@@ -1,8 +1,9 @@
 import logging
+import sys
 import pytz
 from datetime import datetime
 
-from casestudy.extensions import db
+from casestudy.extensions import db, redis_client
 from casestudy.services.resource import TestAlbertStockClient
 from casestudy.database import Security, Watchlist, SecurityPriceTracker
 
@@ -37,30 +38,24 @@ def update_security_prices():
     query = db.session.query(Watchlist.security_id, Security.ticker).\
         join(Security, Watchlist.security_id == Security.id).distinct()
 
-    # Get a list of unique tickers
-    tickers = []
-    for row in query:
-        tickers.append(row.ticker)
+    security_dicts = [{'security_id': row.security_id, 'ticker': row.ticker, 'last_updated': str(datetime.now(pytz.utc))}
+                      for row in query]
 
-    logging.info(f'tickers: {tickers}')
+    # Get a list of unique tickers
+    tickers_request = []
+    for row in query:
+        tickers_request.append(row.ticker)
 
     # Fetch the latest prices for all tickers using a single API call
     # Replace API_ENDPOINT and API_KEY with your actual endpoint and API key
-    response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(tickers)
-    logging.info(f'response: {response}')
+    response = TestAlbertStockClient("base_resource").get_stock_prices_by_tickers(tickers_request)
+    #prefixed_stock_prices = {f'stock_prices:{symbol}': price for symbol, price in response.items()}
+    # Store the dictionaries in Redis
 
-    # Update existing prices and create a list of new prices
-    updated_prices = []
-    for security_id, ticker in query:
-        if ticker in response:
-            security_price = SecurityPriceTracker.query.filter_by(security_id=security_id).one_or_none()
-            if security_price:
-                # Update the existing security price
-                security_price.last_price = response[ticker]
-                security_price.last_updated = datetime.utcnow()
-            else:
-            # Add a new entry for the security
-                db.session.add(SecurityPriceTracker(security_id=security_id, last_price=response[ticker], last_updated=datetime.utcnow()))
-    # Commit the changes to the database
-    db.session.commit()
+    for security_dict in security_dicts:
+        security_dict['last_price'] = response[security_dict['ticker']]
+        print(security_dict, file=sys.stderr)
+        redis_key = f'stock_info:{security_dict["ticker"]}'
+        print(redis_key.rstrip().lower(), file=sys.stderr)
+        redis_client.hmset(redis_key.rstrip().lower(), security_dict)
     return True
