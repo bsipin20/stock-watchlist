@@ -10,38 +10,32 @@ function SearchResultStock(props) {
   const [ticker, setTicker] = useState(props.ticker); 
   const { user, logout } = useContext(UserContext);
 
-  const onAddToWatchlist = async(event) => {
+  const updateWatchlist = async(event) => {
     event.preventDefault();
     try {
       const response = await fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ security_id: props.id }),
-      });
+      }).then(() => {
+        props.fetchWatchlist();
+      })
       const data = await response.json();
-      if (response.status == 200) {
-        const newTickerResponse = await fetch(`http://localhost:8000/v1/securities/${props.id}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const newTickerData = await newTickerResponse.json();
-        console.info('Added to watchlist successfully');
-      }
+      console.info('Added to watchlist successfully');
     } catch (error) {
       console.error('Error adding to watchlist', error);
     }
   }
 
-
   return (
     <div className='stock'>
       <h3>Sym: {props.ticker} Stock: {props.name}</h3>
-      <button onClick={onAddToWatchlist}>Add to watchlist</button>  
+      <button onClick={updateWatchlist}>Add to watchlist</button>  
     </div>
   )
 }
 
-function Search({onUpdate}) {
+function Search({fetchWatchlist}) {
   const { user, logout } = useContext(UserContext);
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -86,28 +80,20 @@ function Search({onUpdate}) {
       </form>
       {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
       ? searchResults["results"]["securities"].map((stock, index) => (
-        <SearchResultStock onUpdate={onUpdate} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
+        <SearchResultStock fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
     </div>
   )
 }
 
-function Content() {
-  const [watchlist, setWatchlist] = useState([]);
-  const {user} = useContext(UserContext);
-
-  const onAddToWatchlist = async(event) => {
-    debugger;
-
-  }
+function Content({watchlist, setWatchlist, fetchWatchlist}) {
+ const {user} = useContext(UserContext);
 
   return(
     <section>
-      <Watchlist watchlist={watchlist} setWatchlist={setWatchlist} />
+      <Watchlist watchlist={watchlist} fetchWatchlist={fetchWatchlist} setWatchlist={setWatchlist} />
     </section>
   )
-        
-
 }
 
 function App() {
@@ -123,13 +109,25 @@ function App() {
     localStorage.removeItem('user');  // Remove user from localStorage on logout
   }, []);
 
- // useEffect(() => {
- //   // Retrieve user from localStorage on component mount
- //   const savedUser = JSON.parse(localStorage.getItem('user'));
- //   if (savedUser) {
- //     setUser(savedUser);
- //   }
-  //}, []);
+  const [watchlist, setWatchlist] = useState([]);
+
+  const fetchWatchlist = () => {
+    {
+      fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        setWatchlist(data);
+        console.info('Watchlist loaded successfully');
+      })
+      .catch((error) => {
+        console.error('Unable to load watchlist', error);
+      });
+    }
+  };
+
 
   const userContextValue = useMemo(() => ({ user, login, logout }), [user, login, logout]);
 
@@ -143,10 +141,14 @@ function App() {
         </header>
         {user && (
           <section>
-            <Search />
+            <Search fetchWatchlist={fetchWatchlist} />
           </section>
         )}
-        {user && <Content />}
+        {user && <Content
+                  watchlist={watchlist}
+                  setWatchlist={setWatchlist}
+                  fetchWatchlist={fetchWatchlist}
+                  />}
       </div>
     </UserContext.Provider>
   );
