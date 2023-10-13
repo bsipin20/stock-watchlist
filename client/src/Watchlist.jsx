@@ -33,7 +33,6 @@ export function Watchlist({watchlist, setWatchlist}) {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
 
-
     if (!user) return null;
 
     const fetchWatchlist = () => {

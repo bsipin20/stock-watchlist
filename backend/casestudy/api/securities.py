@@ -8,17 +8,14 @@ from flask_jwt_extended import jwt_required
 from pydantic import BaseModel
 
 from casestudy.database import Security
-from casestudy.extensions import db
+from casestudy.extensions import db, redis
 
 UTC_TIMEZONE = timezone('UTC')
 
-def get_securities():
-    securities = Security.query.all()
-    results = []
-    for security in securities:
-        logging.info(security)
-        results.append({ 'ticker': security.ticker, 'name': security.name, 'id': security.id})
-    return {'success': True, 'results': results}
+def get_securities(securityId):
+    security = Security.query.filter_by(id=securityId).first()
+    security_dict = redis_client.hgetall(f'stock_info:{security.ticker}')
+    return { 'success': True, 'data': security_dict }
 
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL

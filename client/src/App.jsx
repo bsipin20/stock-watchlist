@@ -19,8 +19,14 @@ function SearchResultStock(props) {
         body: JSON.stringify({ security_id: props.id }),
       });
       const data = await response.json();
-      console.info('Added to watchlist successfully');
-//      props.onUpdate();
+      if (response.status == 200) {
+        const newTickerResponse = await fetch(`http://localhost:8000/v1/securities/${props.id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const newTickerData = await newTickerResponse.json();
+        console.info('Added to watchlist successfully');
+      }
     } catch (error) {
       console.error('Error adding to watchlist', error);
     }
@@ -67,7 +73,6 @@ function Search({onUpdate}) {
     }
   };
 
-
   return (
     <div className='search'>
       <form onSubmit={ handleSubmit }>
@@ -90,6 +95,11 @@ function Search({onUpdate}) {
 function Content() {
   const [watchlist, setWatchlist] = useState([]);
   const {user} = useContext(UserContext);
+
+  const onAddToWatchlist = async(event) => {
+    debugger;
+
+  }
 
   return(
     <section>
