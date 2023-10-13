@@ -20,7 +20,6 @@ function SearchResultStock(props) {
       }).then(() => {
         props.fetchWatchlist();
       })
-      const data = await response.json();
       console.info('Added to watchlist successfully');
     } catch (error) {
       console.error('Error adding to watchlist', error);
@@ -80,7 +79,7 @@ function Search({fetchWatchlist}) {
       </form>
       {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
       ? searchResults["results"]["securities"].map((stock, index) => (
-        <SearchResultStock fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
+        <SearchResultStock key={stock.id} fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
     </div>
   )

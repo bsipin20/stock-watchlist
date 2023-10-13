@@ -14,7 +14,6 @@ function Stock(props) {
     }).then(() => {
       props.fetchWatchlist();
     })
-    const data = await response.json();
   } catch (error) {
       console.error('Error deleting from watchlist', error);
     }
