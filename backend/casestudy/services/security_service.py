@@ -2,7 +2,6 @@ import sys
 
 from flask import jsonify, make_response
 from dataclasses import dataclass
-from pydantic import BaseModel
 from typing import List, Optional 
 
 from casestudy.extensions import db, redis_client
@@ -19,7 +18,6 @@ class SecurityDao:
          return securities
     
     def get_latest_security_prices(self, securities):
-        print(securities, file=sys.stderr)
         keys = [f'stock_info:{ticker}'.lower() for (ticker, ) in securities]
         result = []
         for key in keys:
@@ -40,6 +38,10 @@ class SecurityService:
             return securities
         else:
             return []
+        
+    def get_security_prices(self, securities):
+        result = self.security_dao.get_latest_security_prices(securities)
+        return result
 
 def create_security_service():
     security_dao = SecurityDao(db, redis_client)
