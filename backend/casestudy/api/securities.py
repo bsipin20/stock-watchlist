@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from casestudy.database import Security
 from casestudy.extensions import db, redis_client
+from casestudy.services.security_service import create_security_service
 
 UTC_TIMEZONE = timezone('UTC')
 
@@ -24,13 +25,12 @@ def search_securities():
     if query == '':
         return jsonify([])
     else:
-        result = _find_matching_securities(query)
-        if result:
-            #TODO replace with pydantic validator
+        service = create_security_service()
+        result = service.search_security(query)
+        if len(result) > 0:
             response = { 'results': { 'securities': result }, 'success': True }
-            print(response)
-            return jsonify(response)
-        return jsonify([])
+            return jsonify(response), 200
+        return jsonify([]), 200
 
 def _find_matching_securities(query):
     securities = db.session.query(Security).filter(
@@ -48,16 +48,3 @@ class SecuritySearchResponse(BaseModel):
     results: Dict[str, List[SecurityDTO]]
     success: bool
     error: str = None
-
-def search_securities():
-    query = request.args.get('query', '')  # Get the 'query' parameter from the URL
-    if query == '':
-        repsonse = SecuritySearchResponse(results=[], success=True) 
-        return jsonify(repsonse.dict()), 200
-    else:
-        result = _find_matching_securities(query)
-        if result:
-            securities = [SecurityDTO(id=sec.id, ticker=sec.ticker, name=sec.name) for sec in result]
-            response = SecuritySearchResponse(results={'securities': securities}, success=True)
-            return jsonify(response.dict())
-        return jsonify([])
