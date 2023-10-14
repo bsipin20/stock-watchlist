@@ -14,7 +14,7 @@ from celery.signals import after_setup_logger
 
 from casestudy import database
 from casestudy.app import celery_init_app, create_app
-from casestudy.services.securities import update_security_prices, update_security_table
+from casestudy.services.security_service import create_security_service
 
 from casestudy.extensions import db, redis_client
 
@@ -31,12 +31,13 @@ celery_app = celery_init_app(app)
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(5.0, update_security_tickers.s('new'), name='add securities every 5')
-    sender.add_periodic_task(2.5, create_task.s('hello'), name='add every 5')
+    sender.add_periodic_task(2.5, update_tables.s('hello'), name='add every 5')
 
 @celery_app.task(name="create_task")
-def create_task(arg):
+def update_tables(arg):
     try:
-        updated = update_security_prices()
+        security_service = create_security_service()
+        updated = security_service.update_security_prices()
         if updated:
             logging.info(f'Updated security prices')
         else:
@@ -53,11 +54,11 @@ def update_security_tickers(arg):
     """
     Update the security tickers
     """
-    updated = update_security_table()
+    security_service = create_security_service()
+    updated = security_service.update_security_table()
     print('finished updating security tickers', file=sys.stderr)
     if updated:
         logging.info(f'Updated security tickers')
-        redis_client.get(f'websocket:security_tickers')
     else:
         logging.error(f'Failed to update security tickers')
     return True

@@ -38,9 +38,6 @@ def update_security_prices():
     query = db.session.query(Watchlist.security_id, Security.ticker).\
         join(Security, Watchlist.security_id == Security.id).distinct()
 
-    security_dicts = [{'security_id': row.security_id, 'ticker': row.ticker, 'last_updated': str(datetime.now(pytz.utc))}
-                      for row in query]
-
     # Get a list of unique tickers
     tickers_request = []
     for row in query:
