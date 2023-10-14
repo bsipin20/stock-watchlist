@@ -1,0 +1,69 @@
+import sys
+import pytz
+import logging
+from datetime import datetime
+
+from flask import jsonify, make_response
+from casestudy.database.dao import SecurityDao, WatchlistDao
+from casestudy.resource import get_stock_client
+from casestudy.extensions import db, redis_client
+
+class SecurityService:
+    def __init__(self, security_dao, watchlist_dao, stock_client):
+        self.security_dao = security_dao
+        self.watchlist_dao = watchlist_dao
+        self.stock_client = stock_client
+
+    def search_security(self, query):
+        result = self.security_dao.find_matching_securities_by_query(query)
+        if result:
+            securities = [{'id': sec.id, 'ticker': sec.ticker, 'name': sec.name} for sec in result]
+            return securities
+        else:
+            return []
+    
+    def update_security_table(self):
+        logging.info('Updating security table')
+        existing_securities = self.security_dao.get_all_securities()
+        stock_api_response = self.stock_client.get_all_stocks()
+        new_securities = []
+        for ticker, name in stock_api_response.items():
+            if ticker not in existing_securities:
+                security = {'ticker': ticker, 'name': name}
+                new_securities.append(security)
+
+        if len(new_securities) > 0:
+            logging.info(f'adding {len(new_securities)}')
+            self.security_dao.update_security_table(new_securities)
+            logging.info(f'A total of {len(new_securities)} new securities were added to the database.')
+        
+        logging.info('Security table updated successfully')
+        return True
+    
+    def update_security_prices(self):
+        distinct_watchlist_user_securities = self.watchlist_dao.get_existing_watchlist_securities()
+        request_tickers = [ticker['ticker'] for ticker in distinct_watchlist_user_securities]
+        updated_time = datetime.now(pytz.utc)
+        stock_api_response = self.stock_client.get_stock_prices_by_tickers(request_tickers)
+
+        security_update_input = []
+        for security in distinct_watchlist_user_securities:
+            update = {}
+            update['last_price'] = stock_api_response[security['ticker']]
+            update['last_updated'] = str(updated_time)
+            update['ticker'] = security['ticker']
+            update['name'] = security['name']
+            security_update_input.append(update)
+
+        result = self.security_dao.update_security_prices(security_update_input)
+        if result:
+            logging.info(f'Updated security prices')
+            return True
+        else:
+            return False
+
+def create_security_service():
+    security_dao = SecurityDao(db, redis_client)
+    watchlist_dao = WatchlistDao(db, redis_client)
+    stock_client = get_stock_client()
+    return SecurityService(security_dao, watchlist_dao, stock_client)

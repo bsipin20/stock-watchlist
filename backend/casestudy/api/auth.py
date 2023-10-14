@@ -3,7 +3,7 @@ import sys
 
 from flask import request, jsonify
 from casestudy.extensions import db
-from casestudy.database import User
+from casestudy.database.models  import User
 
 user = {
         'username': 'user',

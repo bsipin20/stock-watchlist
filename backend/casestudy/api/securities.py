@@ -5,59 +5,17 @@ from pytz import timezone
 from typing import List, Dict
 from dataclasses import dataclass
 from flask import jsonify, request
-from flask_jwt_extended import jwt_required
-from pydantic import BaseModel
 
-from casestudy.database import Security
-from casestudy.extensions import db, redis_client
-
-UTC_TIMEZONE = timezone('UTC')
-
-def get_securities(securityId):
-    security = Security.query.filter_by(id=securityId).first()
-    security_dict = redis_client.hgetall(f'stock_info:{str(security.ticker).lower()}')
-    decoded_data = {key.decode(): value.decode() for key, value in security_dict.items()}
-    return { 'success': True, 'data': decoded_data }
+from casestudy.services.security_service import create_security_service
 
 def search_securities():
     query = request.args.get('query', '')  # Get the 'query' parameter from the URL
     if query == '':
         return jsonify([])
     else:
-        result = _find_matching_securities(query)
-        if result:
-            #TODO replace with pydantic validator
+        service = create_security_service()
+        result = service.search_security(query)
+        if len(result) > 0:
             response = { 'results': { 'securities': result }, 'success': True }
-            print(response)
-            return jsonify(response)
-        return jsonify([])
-
-def _find_matching_securities(query):
-    securities = db.session.query(Security).filter(
-        (Security.name.ilike(f'%{query}%')) | (Security.ticker.ilike(f'%{query}%'))
-    ).all()
-    return securities
-
-@dataclass
-class SecurityDTO:
-    id: int
-    ticker: str
-    name: str
-
-class SecuritySearchResponse(BaseModel):
-    results: Dict[str, List[SecurityDTO]]
-    success: bool
-    error: str = None
-
-def search_securities():
-    query = request.args.get('query', '')  # Get the 'query' parameter from the URL
-    if query == '':
-        repsonse = SecuritySearchResponse(results=[], success=True) 
-        return jsonify(repsonse.dict()), 200
-    else:
-        result = _find_matching_securities(query)
-        if result:
-            securities = [SecurityDTO(id=sec.id, ticker=sec.ticker, name=sec.name) for sec in result]
-            response = SecuritySearchResponse(results={'securities': securities}, success=True)
-            return jsonify(response.dict())
-        return jsonify([])
+            return jsonify(response), 200
+        return jsonify([]), 200
