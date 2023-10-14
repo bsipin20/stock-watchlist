@@ -41,18 +41,8 @@ def post_security_to_user_watchlist(userId):
         response = { 'success': False , 'message': 'Security already exists in watchlist'}
         return jsonify(response), 200
 
-
 def delete_security_user_watchlist(userId, securityId):
     watchlist_service = create_watchlist_service()
     result = watchlist_service.delete_security_from_watchlist(userId, securityId)
     response = { 'success': True , 'message': 'Security deleted from watchlist successfully'}
     return response, 200
-        
-
-#
-#        if not existing_watchlist_entry:
-#            return jsonify({'message': 'Cannot '}), 200
-#        else:
-#            db.session.delete(existing_watchlist_entry)
-#            db.session.commit()
-#            return jsonify({'message': 'Watchlist entry deleted successfully'}), 200
