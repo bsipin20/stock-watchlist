@@ -14,7 +14,7 @@ function Stock(props) {
     }).then(() => {
       props.fetchWatchlist();
     })
-  } catch (error) {
+    } catch (error) {
       console.error('Error deleting from watchlist', error);
     }
   }
@@ -36,27 +36,9 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
 
     if (!user) return null;
 
-    // const fetchWatchlist = () => {
-    //   {
-    //     fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list`, {
-    //       method: 'GET',
-    //       headers: { 'Content-Type': 'application/json' }
-    //     })
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       setWatchlist(data);
-    //       console.info('Watchlist loaded successfully');
-    //     })
-    //     .catch((error) => {
-    //       console.error('Unable to load watchlist', error);
-    //     });
-    //   }
-    // };
     useEffect(() => {
       fetchWatchlist();
       const interval = setInterval(fetchWatchlist, 5000);
-  
-      // Clean up the interval to prevent memory leaks
       return () => clearInterval(interval);
     }, []);
 

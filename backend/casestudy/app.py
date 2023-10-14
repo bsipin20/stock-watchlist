@@ -1,4 +1,5 @@
 import logging
+import redis
 from flask_cors import CORS
 from flask import Flask
 from flask_jwt_extended import create_access_token, JWTManager, jwt_required, set_access_cookies
@@ -41,3 +42,23 @@ def celery_init_app(app) -> Celery:
     celery_app.set_default()
     return celery_app
 
+def get_or_create_db_session():
+    global db
+
+    if db.session:
+        return db.session
+    else:
+        db.init_app(app)
+        with app.app_context():
+            db.create_all()
+            return db.session
+
+def get_or_create_redis_client():
+    global redis_client
+
+    if redis_client:
+        return redis_client
+
+    else:
+        redis_client = redis.Redis(host='redis', port=6379, db=0)
+        return redis_client

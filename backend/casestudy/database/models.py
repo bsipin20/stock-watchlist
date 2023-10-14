@@ -43,6 +43,17 @@ class Security(db.Model):
     ticker = db.Column(db.String(10), unique=True)
     name = db.Column(db.String(64), unique=True)
 
+class WatchlistDao:
+
+    def get_watchlist_by_user_id(self, user_id):
+        watchlist = db.session.query(
+            Security.ticker
+            ).join(
+                Watchlist,
+                Watchlist.security_id == Security.id
+                ).filter(Watchlist.user_id == user_id).all()
+        return watchlist
+
 class Watchlist(db.Model):
     """Model for a watchlist entry"""
     id = db.Column(db.Integer, primary_key=True)
