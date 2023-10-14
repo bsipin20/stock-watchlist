@@ -8,7 +8,7 @@ class WatchlistService:
 
     def get_security_prices_by_user_id(self, user_id):
         watch_list = self.watchlist_dao.get_ticker_symbols_by_user_id(user_id)
-        if watch_list:
+        if len(watch_list) > 0:
             response = self.security_dao.get_latest_prices(watch_list)
             return response
         else:
@@ -20,7 +20,6 @@ class WatchlistService:
             return False
         else:
             new_entry = self.watchlist_dao.add_security_to_user_watchlist(user_id, security_id)
-            #TODO
             return new_entry
     
     def delete_security_from_watchlist(self, user_id, security_id):

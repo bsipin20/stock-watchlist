@@ -7,7 +7,7 @@ function Stock(props) {
 
   const onDeleteFromWatchlist = async() => {
     try {
-      const response = await fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list/`, {
+      const response = await fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list/${props.security_id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ "security_id": props.security_id }),
@@ -36,22 +36,6 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
 
     if (!user) return null;
 
-    // const fetchWatchlist = () => {
-    //   {
-    //     fetch(`http://localhost:8000/v1/users/${user.userId}/watch_list`, {
-    //       method: 'GET',
-    //       headers: { 'Content-Type': 'application/json' }
-    //     })
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       setWatchlist(data);
-    //       console.info('Watchlist loaded successfully');
-    //     })
-    //     .catch((error) => {
-    //       console.error('Unable to load watchlist', error);
-    //     });
-    //   }
-    // };
     useEffect(() => {
       fetchWatchlist();
       const interval = setInterval(fetchWatchlist, 5000);
@@ -66,7 +50,7 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
         {("data" in watchlist) && (watchlist["data"] && watchlist["data"].length)
         ? 
         watchlist["data"].map((stock, index) => (
-          <Stock ticker={stock.ticker} fetchWatchlist={fetchWatchlist} security_id = {stock.security_id} last_updated = {stock.last_updated} last_price={stock.last_price}/>
+          <Stock ticker={stock.ticker} fetchWatchlist={fetchWatchlist} security_id={stock.security_id} last_updated = {stock.last_updated} last_price={stock.last_price}/>
         )) : <p>No stocks in watchlist</p>}
       </div>
     )
