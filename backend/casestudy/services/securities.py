@@ -5,7 +5,7 @@ from datetime import datetime
 
 from casestudy.extensions import db, redis_client
 from casestudy.services.resource import TestAlbertStockClient
-from casestudy.database import Security, Watchlist, SecurityPriceTracker
+from casestudy.database.models import Security, Watchlist, SecurityPriceTracker
 
 def update_security_table():
     logging.info('Updating security table')

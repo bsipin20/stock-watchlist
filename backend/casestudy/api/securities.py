@@ -5,11 +5,7 @@ from pytz import timezone
 from typing import List, Dict
 from dataclasses import dataclass
 from flask import jsonify, request
-from flask_jwt_extended import jwt_required
-from pydantic import BaseModel
 
-from casestudy.database import Security
-from casestudy.extensions import db, redis_client
 from casestudy.services.security_service import create_security_service
 
 def search_securities():

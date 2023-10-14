@@ -1,29 +1,28 @@
 import sys
+from dataclasses import dataclass
 
-from flask import request, jsonify
+from flask import Flask, request, jsonify
 
-from sqlalchemy.orm import joinedload
 from casestudy.extensions import db, redis_client
-from casestudy.database import Watchlist, Security, SecurityPriceTracker
+from casestudy.services.watchlist_service import create_watchlist_service
 
-def get_users_watch_list(userId):
+def get_user_watch_list(userId):
     """
     Get the watchlist for a user
     parameters:
         userId (int): The user id
     """
-    ticker_symbols = db.session.query(Security.ticker).join(Watchlist, Watchlist.security_id == Security.id).filter(Watchlist.user_id == userId).all()
-    keys = [f'stock_info:{ticker}'.lower() for (ticker, ) in ticker_symbols]
-    response = []
-    for redis_key in keys:
-        security_dict = redis_client.hgetall(redis_key)
-        if security_dict:
-            security_dict = {key.decode('utf-8'): value.decode('utf-8') for key, value in security_dict.items()}
-            response.append(security_dict)
-    response = { 'success': True , 'data': response}
+    watchlist_service = create_watchlist_service()
+    users_watchlist = watchlist_service.get_security_prices_by_user_id(userId)
+    response = { 'success': True , 'data': users_watchlist}
     return jsonify(response), 200
 
-def post_users_watch_list(userId):
+@dataclass
+class WatchlistRequest:
+    userId: int
+    securityId: int
+
+def post_security_to_user_watchlist(userId):
     """
     
     Post a new watchlist entry for a user
@@ -31,41 +30,29 @@ def post_users_watch_list(userId):
     parameters:
         userId (int): The user id
     """
-    try:
-        security_id = request.json.get('security_id')
-    except ValueError:
-        return jsonify({'error': 'Invalid security_id'}), 400
-    
-    if request.method == 'POST':
-        # Validate security exists before adding to watchlist
-        if not Security.query.filter_by(id=security_id).first():
-            return jsonify({'error': 'Invalid security_id - Security not found'}), 400
-
-        # Check if the user_id and security_id combination already exists in the watchlist
-        existing_watchlist_entry = Watchlist.query.filter_by(user_id=userId, security_id=security_id).first()
-
-        if existing_watchlist_entry:
-            return jsonify({'message': 'Watchlist entry already exists for this user and security'}), 200
-
-        # Create a new watchlist entry
-        new_watchlist_entry = Watchlist(user_id=userId, security_id=security_id)
-
-        try:
-            db.session.add(new_watchlist_entry)
-            db.session.commit()
-            return jsonify({'message': 'Watchlist entry added successfully'}), 201
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
+    obj = request.get_json()
+    security_id = obj.get('security_id')
+    watchlist_service = create_watchlist_service()
+    result = watchlist_service.add_security_to_watchlist(userId, security_id)
+    if result:
+        response = { 'success': True , 'message': 'Security added to watchlist successfully'}
+        return jsonify(response), 200
     else:
-        if not Security.query.filter_by(id=security_id).first():
-            return jsonify({'error': 'Invalid security_id - Security not found'}), 400
+        response = { 'success': False , 'message': 'Security already exists in watchlist'}
+        return jsonify(response), 200
 
-        existing_watchlist_entry = Watchlist.query.filter_by(user_id=userId, security_id=security_id).first()
 
-        if not existing_watchlist_entry:
-            return jsonify({'message': 'Cannot '}), 200
-        else:
-            db.session.delete(existing_watchlist_entry)
-            db.session.commit()
-            return jsonify({'message': 'Watchlist entry deleted successfully'}), 200
+def delete_security_user_watchlist(userId, securityId):
+    watchlist_service = create_watchlist_service()
+    result = watchlist_service.delete_security_from_watchlist(userId, securityId)
+    response = { 'success': True , 'message': 'Security deleted from watchlist successfully'}
+    return response, 200
+        
+
+#
+#        if not existing_watchlist_entry:
+#            return jsonify({'message': 'Cannot '}), 200
+#        else:
+#            db.session.delete(existing_watchlist_entry)
+#            db.session.commit()
+#            return jsonify({'message': 'Watchlist entry deleted successfully'}), 200
