@@ -71,6 +71,8 @@ class SecurityDao:
         result = []
         for key in keys:
             latest_security_price_info = self.redis_client.hgetall(key)
+            print("HEREDSFFSDF")
+            print(latest_security_price_info, file=sys.stderr)
             if latest_security_price_info:
                 parsed_info = {key.decode('utf-8'): value.decode('utf-8') for key, value in latest_security_price_info.items()}
                 result.append(parsed_info)

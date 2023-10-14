@@ -52,6 +52,7 @@ class SecurityService:
             update['last_price'] = stock_api_response[security['ticker']]
             update['last_updated'] = str(updated_time)
             update['ticker'] = security['ticker']
+            update['security_id'] = security['security_id']
             update['name'] = security['name']
             security_update_input.append(update)
 
