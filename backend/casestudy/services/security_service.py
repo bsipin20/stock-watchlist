@@ -20,6 +20,7 @@ class SecurityService:
         result = self.security_dao.find_matching_securities_by_query(query)
         if result:
             securities = [{'id': sec.id, 'ticker': sec.ticker, 'name': sec.name} for sec in result]
+            print(securities, file=sys.stderr)
             return securities
         else:
             return []

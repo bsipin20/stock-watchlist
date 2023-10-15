@@ -38,6 +38,8 @@ class WatchlistDao:
         else:
             return False
 
+class SecurityInsertException(Exception):
+    pass
 
 class SecurityDao:
 
@@ -66,11 +68,15 @@ class SecurityDao:
         return watchlist_items
 
     def add_new_securities(self, securities):
-        for security in securities:
-            new_security = Security(name=security['name'], ticker=security['ticker'])
-            self.db.session.add(new_security)
-        self.db.session.commit()
-        return True
+        try:
+            for security in securities:
+                new_security = Security(name=security['name'], ticker=security['ticker'])
+                self.db.session.add(new_security)
+            self.db.session.commit()
+            return True
+        except Exception as e:
+            self.db.session.rollback()
+            raise SecurityInsertException(f"Error adding securities: {str(e)}")
 
     def find_matching_securities_by_query(self, query):
         securities = self.db.session.query(Security).filter(
@@ -93,4 +99,3 @@ class SecurityDao:
                 parsed_info = {key.decode('utf-8'): value.decode('utf-8') for key, value in latest_security_price_info.items()}
                 result.append(parsed_info)
         return result
-    
