@@ -33,7 +33,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(2000, update_security_tickers.s('new'), name='add securities every 5')
     sender.add_periodic_task(5.0, update_security_prices.s('hello'), name='add every 5')
 
-@celery_app.task(name="create_task")
+@celery_app.task(name="update_security_prices")
 def update_security_prices(arg):
     try:
         security_service = create_security_service()

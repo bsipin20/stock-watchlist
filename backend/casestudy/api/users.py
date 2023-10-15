@@ -24,9 +24,8 @@ def get_user_watch_list(userId):
     """
     watchlist_service = create_watchlist_service()
     users_watchlist = watchlist_service.get_security_prices_by_user_id(userId)
-    #TODO type check users_watchlist
     if users_watchlist:
-        response = { 'success': True , 'data': users_watchlist}
+        response = { 'success': True , 'results': users_watchlist}
         return jsonify(response), 200
     else:
         response = { 'success': False , 'message': 'No watchlist items found', 'data': []}

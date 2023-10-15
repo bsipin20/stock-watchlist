@@ -5,13 +5,6 @@ from flask import request, jsonify
 from casestudy.extensions import db
 from casestudy.database.models  import User
 
-user = {
-        'username': 'user',
-        'email': 'user@gmail.com',
-        'first_name': 'John',
-        'last_name': 'Doe',
-}
-
 def login():
     data = request.get_json()
     username = data.get('username')

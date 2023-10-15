@@ -33,24 +33,6 @@ class SecurityService:
         else:
             return []
 
-    def get_security_info(self, security_id):
-        response = self.stock_client.get_stock_info([security_id])
-        ticker = next(iter(data))
-        value = response[ticker]
-        security = self.security_dao.get_security_by_id(security_id)
-        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
-        if response:
-            result = SecurityLatestPriceInfo(
-                ticker=ticker,
-                name=security['name'],
-                last_price=value,
-                security_id=security_id,
-                last_updated=utc_timestamp
-            )
-            return asdict(result)
-        else:
-            return {}
-
     def update_security_table(self):
         logging.info('Updating security table')
         existing_securities = self.security_dao.get_security_id_ticker_lookup()
@@ -73,10 +55,11 @@ class SecurityService:
         return True
     
     def update_security_prices(self):
-        securities = self.security_dao.get_all_securities()
+        # get all tickers that our current users care about and update
+        securities = self.watchlist_dao.get_existing_watchlist_securities()
         tickers = [sec['ticker'] for sec in securities]
         logging.info(f'TICKERS: {tickers}')
-        # absent update time from client this is the best we can
+        # absent an update time from stock api client this is the best we can
         # do for when the price was last updated
         utc_timestamp = int(datetime.now(timezone.utc).timestamp())
         stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
@@ -94,6 +77,25 @@ class SecurityService:
         if result:
             logging.info(f'Updated security prices')
             return True
+        else:
+            return False
+    
+    def get_security_info(self, security_id):
+        security = self.security_dao.get_security_by_id(security_id)
+        response = self.stock_client.get_stock_prices_by_tickers([security['ticker']])
+        ticker = next(iter(response))
+        value = response[ticker]
+        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
+        if response:
+            result = SecurityLatestPriceInfo(
+                ticker = security['ticker'],
+                name=security['name'],
+                last_price = value,
+                security_id = security_id,
+                last_updated = utc_timestamp
+            )
+            self.security_dao.update_security_prices([asdict(result)])
+            return result
         else:
             return False
 

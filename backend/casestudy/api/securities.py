@@ -21,6 +21,7 @@ class Security:
     id: int
     ticker: str
     name: str
+
 @dataclass
 class SearchSecurityResponse:
     results: Optional[List[Security]]
