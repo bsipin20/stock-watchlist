@@ -63,7 +63,19 @@ def client(app):
     return app.test_client()
 
 def test_integration(client):
-    # Assuming your Flask app has a route named 'example_route'
+    sample_response_data = { 
+        'results': {
+            'securities': [
+                {
+                    'id': 1,
+                    'name': 'Apple Inc.',
+                    'ticker': 'AAPL'
+                }
+            ]
+        },
+        'success': True
+    }
+
     response = client.get('/v1/securities/search?query=appl')
     assert response.status_code == 200
-    assert response.json == {'results': {'securities': [{'id': 1, 'name': 'Apple Inc.', 'ticker': 'AAPL'}]}, 'success': True}
+    assert response.json == sample_response_data
