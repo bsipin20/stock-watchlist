@@ -30,11 +30,11 @@ celery_app = celery_init_app(app)
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(5.0, update_security_tickers.s('new'), name='add securities every 5')
-    sender.add_periodic_task(2.5, update_tables.s('hello'), name='add every 5')
+    sender.add_periodic_task(2000, update_security_tickers.s('new'), name='add securities every 5')
+    sender.add_periodic_task(5.0, update_security_prices.s('hello'), name='add every 5')
 
 @celery_app.task(name="create_task")
-def update_tables(arg):
+def update_security_prices(arg):
     try:
         security_service = create_security_service()
         updated = security_service.update_security_prices()

@@ -79,7 +79,6 @@ class AlbertStockClient(BaseStockClient):
     def get_stock_prices_by_tickers(self, tickers):
         retries = 0
         ticker_string = ','.join(tickers)
-        print(ticker_string)
         while retries < self.max_retries:
             result = self._make_request('casestudy/stock/prices', {'tickers': ticker_string})
             if result is not None:
