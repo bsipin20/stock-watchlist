@@ -5,7 +5,10 @@ import requests
 import json
 import time
 
+from flask import current_app
+
 from abc import ABCMeta, abstractmethod
+from casestudy import app
 
 class BaseStockClient:
     def __init__(self, base_resource, max_retries=3, retry_delay = 1):
@@ -85,4 +88,8 @@ class AlbertStockClient(BaseStockClient):
 
 
 def get_stock_client():
-    return TestAlbertStockClient("test")
+    with current_app.app_context():
+        if current_app.config["USE_MOCK_STOCK_API_CLIENT"]:
+            return TestAlbertStockClient("test")
+        else:
+            raise NotImplementedError
