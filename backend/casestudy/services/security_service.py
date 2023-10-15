@@ -98,14 +98,13 @@ class SecurityService:
             return False
 
 def create_security_service():
-    with current_app.app_context():
-        watchlist_dao = WatchlistDao(db, redis_client)
-        security_dao = SecurityDao(db, redis_client)
-        stock_client = get_stock_client(
-            current_app.config['STOCK_API_URI'],
-            current_app.config['STOCK_API_KEY'],
-            current_app.config['ENVIRONMENT']
-        )
+    watchlist_dao = WatchlistDao(db, redis_client)
+    security_dao = SecurityDao(db, redis_client)
+    stock_client = get_stock_client(
+        current_app.config['STOCK_API_URI'],
+        current_app.config['STOCK_API_KEY'],
+        current_app.config['ENVIRONMENT']
+    )
     return SecurityService(security_dao, watchlist_dao, stock_client)
 
 
