@@ -1,3 +1,5 @@
+import logging
+from flask import current_app
 from casestudy.extensions import db, redis_client
 from casestudy.database.dao import WatchlistDao, SecurityDao
     

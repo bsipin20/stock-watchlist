@@ -17,7 +17,6 @@ def login():
     username = data.get('username')
     user = User.query.filter_by(username=username).first()
     response = jsonify({"result": { "userId": user.id, "username": user.username}, "success": True})
-
     return response, 200
 
 def register():

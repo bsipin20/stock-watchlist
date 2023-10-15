@@ -23,12 +23,12 @@ class Security:
     name: str
 @dataclass
 class SearchSecurityResponse:
-    result: Optional[List[Security]]
+    results: Optional[List[Security]]
     success: bool
     error: Optional[str]
 
 def search_securities():
-    query = request.args.get('query', '')  # Get the 'query' parameter from the URL
+    query = request.args.get('query', '')
     search_request = SearchRequest(query)
     try:
         search_request.validate()
@@ -40,10 +40,16 @@ def search_securities():
         result = service.search_security(search_request.query)
         security_objects = []
         for security_data in result:
-            security_obj = Security(id=security_data['id'], ticker=security_data.ticker, name=security_data.name)
+            security_obj = Security(id=security_data['id'], ticker=security_data['ticker'], name=security_data['name'])
             security_objects.append(security_obj)
-        response = SearchSecurityResponse(result=security_objects, success=True, error=None)
+        response = SearchSecurityResponse(results=security_objects, success=True, error=None)
         return jsonify(response), 200
     except (ValueError, TypeError, AttributeError) as e:
         logging.error(f'Error searching securities: {str(e)}')
         return jsonify({'error': "server error"}), 500
+
+
+def get_security_info(securityId):
+    service = create_security_service()
+    security_info = service.get_security_info(securityId)
+    return jsonify(security_info), 200
