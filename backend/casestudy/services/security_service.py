@@ -36,9 +36,12 @@ class SecurityService:
 
         if len(new_securities) > 0:
             logging.info(f'adding {len(new_securities)}')
-            self.security_dao.update_security_table(new_securities)
-            logging.info(f'A total of {len(new_securities)} new securities were added to the database.')
-        
+            result = self.security_dao.update_security_table(new_securities)
+            if result:
+                num_added = result['num_added']
+                logging.info(f'A total of {num_added} new securities were added to the database.')
+            else:
+                logging.info('No new securities were added to the database.')
         logging.info('Security table updated successfully')
         return True
     

@@ -6,10 +6,9 @@ import requests
 import json
 import time
 from abc import ABCMeta, abstractmethod
-
 class BaseStockClient:
     HEADER = None
-    def __init__(self, base_resource, api_key, max_retries=3, retry_delay = 1):
+    def __init__(self, base_resource, api_key, max_retries=1, retry_delay = 10):
         self.base_resource = base_resource
         self.api_key = api_key
         self.max_retries = max_retries
@@ -79,7 +78,8 @@ class AlbertStockClient(BaseStockClient):
 
     def get_stock_prices_by_tickers(self, tickers):
         retries = 0
-        ticker_string = urllib.parse.quote(','.join(tickers[:-1]))
+        ticker_string = ','.join(tickers)
+        print(ticker_string)
         while retries < self.max_retries:
             result = self._make_request('casestudy/stock/prices', {'tickers': ticker_string})
             if result is not None:
@@ -97,5 +97,5 @@ def get_stock_client(resource_uri, api_key, environment):
 
 if __name__ == "__main__":
     client = get_stock_client("https://app.albert.com", "d2db5753-33f6-4e25-b915-6cbdda7953e7", 'development')
-    result = client.get_stock_prices_by_tickers(['AAPL', 'BRK.A', 'GOOG', 'MSFT', 'AMZN'])
+    result = client.get_stock_prices_by_tickers(['AAPL', 'AMZN'])
     print(result)
