@@ -38,7 +38,9 @@ class WatchlistDao:
         else:
             return False
 
+
 class SecurityDao:
+
     def __init__(self, db, redis_client):
         self.db = db
         self.redis_client = redis_client
@@ -62,6 +64,7 @@ class SecurityDao:
         for row in query:
             watchlist_items.append({'security_id': row[0], 'ticker': row[1], 'name': row[2]})
         return watchlist_items
+
     def add_new_securities(self, securities):
         for security in securities:
             new_security = Security(name=security['name'], ticker=security['ticker'])
@@ -70,9 +73,9 @@ class SecurityDao:
         return True
 
     def find_matching_securities_by_query(self, query):
-         securities = self.db.session.query(Security).filter(
+        securities = self.db.session.query(Security).filter(
             (Security.name.ilike(f'%{query}%')) | (Security.ticker.ilike(f'%{query}%'))).all()
-         return securities
+        return securities
 
     def update_security_prices(self, securities):
         for security in securities:

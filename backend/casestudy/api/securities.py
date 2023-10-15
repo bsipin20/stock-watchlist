@@ -1,7 +1,6 @@
 import logging
 import sys
 from datetime import datetime
-from pytz import timezone
 from typing import List, Dict
 from dataclasses import dataclass
 from flask import jsonify, request

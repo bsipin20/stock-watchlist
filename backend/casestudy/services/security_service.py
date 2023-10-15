@@ -55,14 +55,14 @@ class SecurityService:
         stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
         security_update_input = []
         for security in securities:
-            update = {}
-            update['last_price'] = stock_api_response[security['ticker']]
-            update['last_updated'] = utc_timestamp
-            update['ticker'] = security['ticker']
-            update['security_id'] = security['security_id']
-            update['name'] = security['name']
+            update = {
+                'last_price': stock_api_response[security['ticker']],
+                'last_updated': utc_timestamp,
+                'ticker': security['ticker'],
+                'security_id': security['security_id'],
+                'name': security['name']
+            }
             security_update_input.append(update)
-
         result = self.security_dao.update_security_prices(security_update_input)
         if result:
             logging.info(f'Updated security prices')
