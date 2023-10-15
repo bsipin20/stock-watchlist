@@ -1,9 +1,11 @@
 import sys
+import time
 import pytz
 import logging
 from datetime import datetime
 
 from flask import jsonify, make_response
+from flask import current_app
 from casestudy.database.dao import SecurityDao, WatchlistDao
 from casestudy.resource import get_stock_client
 from casestudy.extensions import db, redis_client
@@ -43,14 +45,13 @@ class SecurityService:
     def update_security_prices(self):
         distinct_watchlist_user_securities = self.watchlist_dao.get_existing_watchlist_securities()
         request_tickers = [ticker['ticker'] for ticker in distinct_watchlist_user_securities]
-        updated_time = datetime.now(pytz.utc)
+        utc_timestamp = int(time.time())  # Current UTC timestamp in seconds
         stock_api_response = self.stock_client.get_stock_prices_by_tickers(request_tickers)
-
         security_update_input = []
         for security in distinct_watchlist_user_securities:
             update = {}
             update['last_price'] = stock_api_response[security['ticker']]
-            update['last_updated'] = str(updated_time)
+            update['last_updated'] = utc_timestamp
             update['ticker'] = security['ticker']
             update['security_id'] = security['security_id']
             update['name'] = security['name']
@@ -66,5 +67,13 @@ class SecurityService:
 def create_security_service():
     security_dao = SecurityDao(db, redis_client)
     watchlist_dao = WatchlistDao(db, redis_client)
-    stock_client = get_stock_client()
+    with current_app.app_context():
+        stock_client = get_stock_client(
+            current_app.config['STOCK_API_URI'],
+            current_app.config['STOCK_API_KEY'],
+            current_app.config['ENVIRONMENT']
+        )
     return SecurityService(security_dao, watchlist_dao, stock_client)
+
+
+
