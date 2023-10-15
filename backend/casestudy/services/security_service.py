@@ -26,7 +26,7 @@ class SecurityService:
     
     def update_security_table(self):
         logging.info('Updating security table')
-        existing_securities = self.security_dao.get_all_securities()
+        existing_securities = self.security_dao.get_security_id_ticker_lookup()
         stock_api_response = self.stock_client.get_all_stocks()
         new_securities = []
         for ticker, name in stock_api_response.items():
@@ -46,12 +46,15 @@ class SecurityService:
         return True
     
     def update_security_prices(self):
-        distinct_watchlist_user_securities = self.watchlist_dao.get_existing_watchlist_securities()
-        request_tickers = [ticker['ticker'] for ticker in distinct_watchlist_user_securities]
-        utc_timestamp = int(time.time())  # Current UTC timestamp in seconds
-        stock_api_response = self.stock_client.get_stock_prices_by_tickers(request_tickers)
+        securities = self.security_dao.get_all_securities()
+        tickers = [sec['ticker'] for sec in securities]
+        logging.info(f'TICKERS: {tickers}')
+        # absent update time from client this is the best we can
+        # do for when the price was last updated
+        utc_timestamp = int(time.time())
+        stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
         security_update_input = []
-        for security in distinct_watchlist_user_securities:
+        for security in securities:
             update = {}
             update['last_price'] = stock_api_response[security['ticker']]
             update['last_updated'] = utc_timestamp

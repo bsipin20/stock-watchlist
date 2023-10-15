@@ -43,7 +43,7 @@ class SecurityDao:
         self.db = db
         self.redis_client = redis_client
 
-    def get_all_securities(self):
+    def get_security_id_ticker_lookup(self):
         existing_security_names = dict([(key, value) for key, value in self.db.session.query(Security.ticker, Security.name).all()])
         return existing_security_names
 
@@ -56,6 +56,12 @@ class SecurityDao:
         self.db.session.commit()
         return { 'num_added': num_added }
 
+    def get_all_securities(self):
+        query = self.db.session.query(Security.id, Security.ticker, Security.name).distinct()
+        watchlist_items = []
+        for row in query:
+            watchlist_items.append({'security_id': row[0], 'ticker': row[1], 'name': row[2]})
+        return watchlist_items
     def add_new_securities(self, securities):
         for security in securities:
             new_security = Security(name=security['name'], ticker=security['ticker'])
