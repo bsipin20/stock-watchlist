@@ -84,6 +84,5 @@ class AlbertStockClient(BaseStockClient):
         return None
 
 
-
 def get_stock_client():
     return TestAlbertStockClient("test")
