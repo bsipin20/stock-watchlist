@@ -1,21 +1,26 @@
 import random
+import urllib.parse
 import logging
 import string
 import requests
 import json
 import time
-
 from abc import ABCMeta, abstractmethod
-
 class BaseStockClient:
-    def __init__(self, base_resource, max_retries=3, retry_delay = 1):
+    HEADER = None
+    def __init__(self, base_resource, api_key, max_retries=1, retry_delay = 10):
         self.base_resource = base_resource
-        self.max_retries = retry_delay
+        self.api_key = api_key
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
     def _make_request(self, endpoint, params=None):
-        url = f"{self.base_url}/{endpoint}"
+        url = f"{self.base_resource}/{endpoint}"
+        headers = {}
+        if self.HEADER:
+            headers = {self.HEADER: self.api_key}
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, headers=headers)
             response.raise_for_status()  # Raise exception for 4xx and 5xx status codes
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -26,7 +31,7 @@ class BaseStockClient:
     def get_all_stocks(self):
         """
         Method to get all stock prices.
-        This method must be implemented by derived classes.
+        This method must be implemented by concrete classes.
         """
         raise NotImplementedError
 
@@ -34,17 +39,16 @@ class BaseStockClient:
     def get_stock_prices_by_tickers(self, tickers):
         """
         Method to get stock prices for specific tickers.
-        This method must be implemented by derived classes.
+        This method must be implemented by concrete classes.
         """
         raise NotImplementedError
 
 class TestAlbertStockClient(BaseStockClient):
     STOCKS = {
             "AAPL": 'Apple',
-            "GOOG": 'Alphabet', # 'GOOGL
             "MSFT": 'Microsoft',
             "AMZN": 'Amazon',
-            "BRK.A": 'Berkshire Hathaway'
+            "BUD": 'Berkshire Hathaway'
         }
 
     def get_all_stocks(self):
@@ -59,12 +63,12 @@ class TestAlbertStockClient(BaseStockClient):
         return result
 
 class AlbertStockClient(BaseStockClient):
-    BASE_URL = "https://albert-stocks-api.herokuapp.com"
+    HEADER = "Albert-Case-Study-API-Key"
 
     def get_all_stocks(self):
         retries = 0
         while retries < self.max_retries:
-            result = self._make_request('stock/prices')
+            result = self._make_request('casestudy/stock/tickers/')
             if result is not None:
                 return result
             retries += 1
@@ -74,8 +78,10 @@ class AlbertStockClient(BaseStockClient):
 
     def get_stock_prices_by_tickers(self, tickers):
         retries = 0
+        ticker_string = ','.join(tickers)
+        print(ticker_string)
         while retries < self.max_retries:
-            result = self._make_request('stock/prices', {'tickers': tickers})
+            result = self._make_request('casestudy/stock/prices', {'tickers': ticker_string})
             if result is not None:
                 return result
             retries += 1
@@ -83,7 +89,13 @@ class AlbertStockClient(BaseStockClient):
         print("Max retries exceeded. Unable to get stock prices by tickers.")
         return None
 
+def get_stock_client(resource_uri, api_key, environment):
+    if environment == 'development':
+        return AlbertStockClient(resource_uri, api_key)
+    elif environment == 'local':
+        return TestAlbertStockClient("test", "test_key")
 
-
-def get_stock_client():
-    return TestAlbertStockClient("test")
+if __name__ == "__main__":
+    client = get_stock_client("https://app.albert.com", "d2db5753-33f6-4e25-b915-6cbdda7953e7", 'development')
+    result = client.get_stock_prices_by_tickers(['AAPL', 'AMZN'])
+    print(result)

@@ -7,6 +7,7 @@ COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
 COPY . /app/
+COPY .env .env
 
 CMD python manage.py run
 

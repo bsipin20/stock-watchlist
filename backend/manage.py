@@ -1,4 +1,6 @@
 from casestudy.app import create_app
+import os
+from dotenv import load_dotenv
 
 app = create_app()
 

@@ -46,7 +46,16 @@ class SecurityDao:
     def get_all_securities(self):
         existing_security_names = dict([(key, value) for key, value in self.db.session.query(Security.ticker, Security.name).all()])
         return existing_security_names
-    
+
+    def update_security_table(self, securities):
+        num_added = 0
+        for i in securities:
+            new_security = Security(name=i['name'], ticker=i['ticker'])
+            self.db.session.add(new_security)
+            num_added += 1
+        self.db.session.commit()
+        return { 'num_added': num_added }
+
     def add_new_securities(self, securities):
         for security in securities:
             new_security = Security(name=security['name'], ticker=security['ticker'])

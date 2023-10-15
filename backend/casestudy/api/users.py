@@ -1,4 +1,14 @@
-import sys
+"""
+Module: watchlist_controller.py
+
+This module contains functions and data structures related to managing a user's watchlist for securities.
+It defines API endpoints for retrieving, adding, and deleting securities from the user's watchlist.
+
+Functions:
+    - get_user_watch_list(userId): Retrieve the watchlist for a user.
+    - post_security_to_user_watchlist(userId): Add a new security to the user's watchlist.
+    - delete_security_user_watchlist(userId, securityId): Delete a security from the user's watchlist.
+"""
 from dataclasses import dataclass
 
 from flask import Flask, request, jsonify

@@ -1,6 +1,7 @@
 import logging
 from flask_cors import CORS
 from flask import Flask
+
 from flask_jwt_extended import create_access_token, JWTManager, jwt_required, set_access_cookies
 from celery.schedules import timedelta
 from celery import Celery, Task
