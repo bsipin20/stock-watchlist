@@ -40,6 +40,19 @@ function Search({fetchWatchlist}) {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const handleNextPage = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+  };
+  
+  const handlePrevPage = () => {
+    setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
+  };
+
 
   const handleInputChange = (event) => {
     setQuery(event.target.value);
@@ -78,9 +91,15 @@ function Search({fetchWatchlist}) {
           />
       </form>
       {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
-      ? searchResults["results"]["securities"].map((stock, index) => (
+      ? searchResults["results"]["securities"]
+      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+      .map((stock, index) => (
         <SearchResultStock key={stock.id} fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
+
+          <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
+    <span>Page {currentPage}</span>
+    <button onClick={handleNextPage}>Next</button>
     </div>
   )
 }

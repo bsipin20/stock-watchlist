@@ -1,5 +1,5 @@
 import sys
-import time
+from datetime import datetime, timezone
 import pytz
 import logging
 from datetime import datetime
@@ -51,7 +51,7 @@ class SecurityService:
         logging.info(f'TICKERS: {tickers}')
         # absent update time from client this is the best we can
         # do for when the price was last updated
-        utc_timestamp = int(time.time())
+        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
         stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
         security_update_input = []
         for security in securities:

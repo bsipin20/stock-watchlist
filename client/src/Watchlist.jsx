@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useContext } from 'react'
 import { UserContext } from './UserContext';
+import { convertToLocaleTimeString } from './utils.js';
 
 function Stock(props) {
   const {user} = useContext(UserContext);
+
 
   const onDeleteFromWatchlist = async() => {
     try {
@@ -20,9 +22,8 @@ function Stock(props) {
   }
     return (
       <div className='stock'>
-        <h3>{props.ticker}</h3>
-        <p>{props.last_price}</p>
-        <p>last update: {props.last_updated}</p>
+        <p>{props.ticker}, {props.name}, ${props.last_price}</p>
+        <p>last_updated: {convertToLocaleTimeString(props.last_updated)}</p>
         <button onClick={onDeleteFromWatchlist}>Delete</button>
       </div>
     )
@@ -33,6 +34,19 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
     const [buttonStatus, setButtonStatus] = useState(false);
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+    const handleNextPage = () => {
+      setCurrentPage(prevPage => prevPage + 1);
+    };
+    
+    const handlePrevPage = () => {
+      setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
+    };
 
     if (!user) return null;
 
@@ -49,9 +63,16 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
         <h3>Watchlist</h3>
         {("data" in watchlist) && (watchlist["data"] && watchlist["data"].length)
         ? 
-        watchlist["data"].map((stock, index) => (
-          <Stock ticker={stock.ticker} fetchWatchlist={fetchWatchlist} security_id={stock.security_id} last_updated = {stock.last_updated} last_price={stock.last_price}/>
-        )) : <p>No stocks in watchlist</p>}
+        watchlist["data"]
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        .map((stock, index) => (
+          <Stock key={index} ticker={stock.ticker} name={stock.name} fetchWatchlist={fetchWatchlist} security_id={stock.security_id} last_updated = {stock.last_updated} last_price={stock.last_price}/>
+        )) 
+        : <p>No stocks to search</p>}
+         {/* Pagination controls */}
+    <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
+    <span>Page {currentPage}</span>
+    <button onClick={handleNextPage}>Next</button>
       </div>
     )
   }
