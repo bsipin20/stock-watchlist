@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime, timezone
+from dataclasses import dataclass, asdict
 import pytz
 import logging
 from datetime import datetime
@@ -9,6 +10,14 @@ from flask import current_app
 from casestudy.database.dao import SecurityDao, WatchlistDao
 from casestudy.resource import get_stock_client
 from casestudy.extensions import db, redis_client
+
+@dataclass
+class SecurityLatestPriceInfo:
+    ticker: str
+    name: str
+    last_price: float
+    last_updated: int
+    security_id: int
 
 class SecurityService:
     def __init__(self, security_dao, watchlist_dao, stock_client):
@@ -23,7 +32,7 @@ class SecurityService:
             return securities
         else:
             return []
-    
+
     def update_security_table(self):
         logging.info('Updating security table')
         existing_securities = self.security_dao.get_security_id_ticker_lookup()
@@ -46,39 +55,59 @@ class SecurityService:
         return True
     
     def update_security_prices(self):
-        securities = self.security_dao.get_all_securities()
-        tickers = [sec['ticker'] for sec in securities]
-        logging.info(f'TICKERS: {tickers}')
-        # absent update time from client this is the best we can
-        # do for when the price was last updated
-        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
-        stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
-        security_update_input = []
-        for security in securities:
-            update = {}
-            update['last_price'] = stock_api_response[security['ticker']]
-            update['last_updated'] = utc_timestamp
-            update['ticker'] = security['ticker']
-            update['security_id'] = security['security_id']
-            update['name'] = security['name']
-            security_update_input.append(update)
-
-        result = self.security_dao.update_security_prices(security_update_input)
-        if result:
+        # get all tickers that our current users care about and update
+        securities = self.watchlist_dao.get_existing_watchlist_securities()
+        if securities:
+            tickers = [sec['ticker'] for sec in securities]
+            logging.info(f'TICKERS: {tickers}')
+            # absent an update time from stock api client this is the best we can
+            # do for when the price was last updated
+            utc_timestamp = int(datetime.now(timezone.utc).timestamp())
+            stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
+            security_update_input = []
+            for security in securities:
+                update = SecurityLatestPriceInfo(
+                    ticker=security['ticker'],
+                    name=security['name'],
+                    last_price=stock_api_response[security['ticker']],
+                    last_updated=utc_timestamp,
+                    security_id=security['security_id']
+                )
+                security_update_input.append(asdict(update))
+            result = self.security_dao.update_security_prices(security_update_input)
             logging.info(f'Updated security prices')
             return True
         else:
             return False
+    
+    def get_latest_security_price(self, security_id):
+        security = self.security_dao.get_security_by_id(security_id)
+        response = self.stock_client.get_stock_prices_by_tickers([security['ticker']])
+        ticker = next(iter(response))
+        value = response[ticker]
+        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
+        if response:
+            result = SecurityLatestPriceInfo(
+                ticker = security['ticker'],
+                name=security['name'],
+                last_price = value,
+                security_id = security_id,
+                last_updated = utc_timestamp
+            )
+            # cache so user can get latest price
+            self.security_dao.update_security_prices([asdict(result)])
+            return result
+        else:
+            return False
 
 def create_security_service():
-    security_dao = SecurityDao(db, redis_client)
     watchlist_dao = WatchlistDao(db, redis_client)
-    with current_app.app_context():
-        stock_client = get_stock_client(
-            current_app.config['STOCK_API_URI'],
-            current_app.config['STOCK_API_KEY'],
-            current_app.config['ENVIRONMENT']
-        )
+    security_dao = SecurityDao(db, redis_client)
+    stock_client = get_stock_client(
+        current_app.config['STOCK_API_URI'],
+        current_app.config['STOCK_API_KEY'],
+        current_app.config['ENVIRONMENT']
+    )
     return SecurityService(security_dao, watchlist_dao, stock_client)
 
 

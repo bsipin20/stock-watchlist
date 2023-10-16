@@ -38,14 +38,23 @@ class WatchlistDao:
         else:
             return False
 
+class SecurityInsertException(Exception):
+    pass
+
 class SecurityDao:
+
     def __init__(self, db, redis_client):
         self.db = db
         self.redis_client = redis_client
-
+    
     def get_security_id_ticker_lookup(self):
         existing_security_names = dict([(key, value) for key, value in self.db.session.query(Security.ticker, Security.name).all()])
         return existing_security_names
+
+    def get_security_by_id(self, security_id):
+        security = self.db.session.query(Security).filter_by(id=security_id).first()
+        result = { 'id': security.id, 'ticker': security.ticker, 'name': security.name }
+        return result
 
     def update_security_table(self, securities):
         num_added = 0
@@ -62,17 +71,22 @@ class SecurityDao:
         for row in query:
             watchlist_items.append({'security_id': row[0], 'ticker': row[1], 'name': row[2]})
         return watchlist_items
+
     def add_new_securities(self, securities):
-        for security in securities:
-            new_security = Security(name=security['name'], ticker=security['ticker'])
-            self.db.session.add(new_security)
-        self.db.session.commit()
-        return True
+        try:
+            for security in securities:
+                new_security = Security(name=security['name'], ticker=security['ticker'])
+                self.db.session.add(new_security)
+            self.db.session.commit()
+            return True
+        except Exception as e:
+            self.db.session.rollback()
+            raise SecurityInsertException(f"Error adding securities: {str(e)}")
 
     def find_matching_securities_by_query(self, query):
-         securities = self.db.session.query(Security).filter(
+        securities = self.db.session.query(Security).filter(
             (Security.name.ilike(f'%{query}%')) | (Security.ticker.ilike(f'%{query}%'))).all()
-         return securities
+        return securities
 
     def update_security_prices(self, securities):
         for security in securities:
@@ -90,4 +104,3 @@ class SecurityDao:
                 parsed_info = {key.decode('utf-8'): value.decode('utf-8') for key, value in latest_security_price_info.items()}
                 result.append(parsed_info)
         return result
-    

@@ -29,7 +29,7 @@ function Stock(props) {
     )
 }
 
-export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
+export function Watchlist({watchlist, fetchWatchlist}) {
     const {user} = useContext(UserContext);
     const [buttonStatus, setButtonStatus] = useState(false);
     const [message, setMessage] = useState("");
@@ -61,9 +61,9 @@ export function Watchlist({watchlist, setWatchlist, fetchWatchlist}) {
     return (
       <div className='watchlist'>
         <h3>Watchlist</h3>
-        {("data" in watchlist) && (watchlist["data"] && watchlist["data"].length)
+        {(watchlist && watchlist.length > 0)
         ? 
-        watchlist["data"]
+        watchlist
         .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
         .map((stock, index) => (
           <Stock key={index} ticker={stock.ticker} name={stock.name} fetchWatchlist={fetchWatchlist} security_id={stock.security_id} last_updated = {stock.last_updated} last_price={stock.last_price}/>

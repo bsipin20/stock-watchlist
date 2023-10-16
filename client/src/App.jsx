@@ -17,9 +17,8 @@ function SearchResultStock(props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ security_id: props.id }),
-      }).then(() => {
-        props.fetchWatchlist();
-      })
+      });
+      props.fetchWatchlist();
       console.info('Added to watchlist successfully');
     } catch (error) {
       console.error('Error adding to watchlist', error);
@@ -59,7 +58,7 @@ function Search({fetchWatchlist}) {
   }
 
   const onRemoveTickerFromSearchResults = (ticker) => {
-    const newSearchResults = searchResults["results"]["securities"].filter((stock) => stock.ticker !== ticker);
+    const newSearchResults = searchResults["results"].filter((stock) => stock.ticker !== ticker);
     setSearchResults(newSearchResults);
   }
 
@@ -71,16 +70,24 @@ function Search({fetchWatchlist}) {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
+      if (!response.ok) {
+        const errorMessage = await response.json();
+        setSearchResults([]);
+        throw new Error(errorMessage["error"]);
+      }
+      setError(null);
       const data = await response.json();
       setSearchResults(data);
+
       console.info('Search loaded successfully');
     } catch (error) {
-      console.errog('Error loading search', error);
+      setError(error.message);
     }
   };
 
   return (
     <div className='search'>
+      {error && <p>Error: {error}</p>}
       <form onSubmit={ handleSubmit }>
         <input
           type="text"
@@ -90,13 +97,12 @@ function Search({fetchWatchlist}) {
           onChange={handleInputChange}
           />
       </form>
-      {("results" in searchResults) && (searchResults["results"] && searchResults["results"]["securities"].length > 0)
-      ? searchResults["results"]["securities"]
+      {("results" in searchResults) && (searchResults["results"] && searchResults["results"].length > 0)
+      ? searchResults["results"]
       .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
       .map((stock, index) => (
         <SearchResultStock key={stock.id} fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
-
           <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
     <span>Page {currentPage}</span>
     <button onClick={handleNextPage}>Next</button>
@@ -104,12 +110,16 @@ function Search({fetchWatchlist}) {
   )
 }
 
-function Content({watchlist, setWatchlist, fetchWatchlist}) {
+function Content({fetchWatchlist, watchlist}) {
  const {user} = useContext(UserContext);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, []);
 
   return(
     <section>
-      <Watchlist watchlist={watchlist} fetchWatchlist={fetchWatchlist} setWatchlist={setWatchlist} />
+      <Watchlist watchlist={watchlist} fetchWatchlist={fetchWatchlist}/>
     </section>
   )
 }
@@ -135,17 +145,20 @@ function App() {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
-      .then((response) => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();  // Parse the response as JSON
+      })
       .then((data) => {
-        setWatchlist(data);
-        console.info('Watchlist loaded successfully');
+        setWatchlist(data['results']);
       })
       .catch((error) => {
         console.error('Unable to load watchlist', error);
       });
     }
   };
-
 
   const userContextValue = useMemo(() => ({ user, login, logout }), [user, login, logout]);
 
@@ -159,12 +172,11 @@ function App() {
         </header>
         {user && (
           <section>
-            <Search fetchWatchlist={fetchWatchlist} />
+            <Search watchlist={watchlist} fetchWatchlist={fetchWatchlist} />
           </section>
         )}
         {user && <Content
                   watchlist={watchlist}
-                  setWatchlist={setWatchlist}
                   fetchWatchlist={fetchWatchlist}
                   />}
       </div>

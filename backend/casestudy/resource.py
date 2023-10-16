@@ -1,3 +1,4 @@
+import sys
 import random
 import urllib.parse
 import logging
@@ -8,7 +9,7 @@ import time
 from abc import ABCMeta, abstractmethod
 class BaseStockClient:
     HEADER = None
-    def __init__(self, base_resource, api_key, max_retries=1, retry_delay = 10):
+    def __init__(self, base_resource, api_key, max_retries=3, retry_delay = 1):
         self.base_resource = base_resource
         self.api_key = api_key
         self.max_retries = max_retries
@@ -78,15 +79,25 @@ class AlbertStockClient(BaseStockClient):
 
     def get_stock_prices_by_tickers(self, tickers):
         retries = 0
-        ticker_string = ','.join(tickers)
+        if len(tickers) == 0:
+            return False
+        elif len(tickers) > 1:
+            ticker_string = ','.join(tickers)
+        else:
+            logging.info(tickers)
+            ticker_string = str(tickers[0])
         while retries < self.max_retries:
+            logging.info(ticker_string)
+
             result = self._make_request('casestudy/stock/prices', {'tickers': ticker_string})
+            print(result, file=sys.stderr)
+            print(result, file=sys.stderr)
             if result is not None:
                 return result
             retries += 1
             time.sleep(self.retry_delay)
         print("Max retries exceeded. Unable to get stock prices by tickers.")
-        return None
+        return False
 
 def get_stock_client(resource_uri, api_key, environment):
     if environment == 'development':
