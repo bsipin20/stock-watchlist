@@ -57,30 +57,30 @@ class SecurityService:
     def update_security_prices(self):
         # get all tickers that our current users care about and update
         securities = self.watchlist_dao.get_existing_watchlist_securities()
-        tickers = [sec['ticker'] for sec in securities]
-        logging.info(f'TICKERS: {tickers}')
-        # absent an update time from stock api client this is the best we can
-        # do for when the price was last updated
-        utc_timestamp = int(datetime.now(timezone.utc).timestamp())
-        stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
-        security_update_input = []
-        for security in securities:
-            update = SecurityLatestPriceInfo(
-                ticker=security['ticker'],
-                name=security['name'],
-                last_price=stock_api_response[security['ticker']],
-                last_updated=utc_timestamp,
-                security_id=security['security_id']
-            )
-            security_update_input.append(asdict(update))
-        result = self.security_dao.update_security_prices(security_update_input)
-        if result:
+        if securities:
+            tickers = [sec['ticker'] for sec in securities]
+            logging.info(f'TICKERS: {tickers}')
+            # absent an update time from stock api client this is the best we can
+            # do for when the price was last updated
+            utc_timestamp = int(datetime.now(timezone.utc).timestamp())
+            stock_api_response = self.stock_client.get_stock_prices_by_tickers(tickers)
+            security_update_input = []
+            for security in securities:
+                update = SecurityLatestPriceInfo(
+                    ticker=security['ticker'],
+                    name=security['name'],
+                    last_price=stock_api_response[security['ticker']],
+                    last_updated=utc_timestamp,
+                    security_id=security['security_id']
+                )
+                security_update_input.append(asdict(update))
+            result = self.security_dao.update_security_prices(security_update_input)
             logging.info(f'Updated security prices')
             return True
         else:
             return False
     
-    def get_security_info(self, security_id):
+    def get_latest_security_price(self, security_id):
         security = self.security_dao.get_security_by_id(security_id)
         response = self.stock_client.get_stock_prices_by_tickers([security['ticker']])
         ticker = next(iter(response))
@@ -94,6 +94,7 @@ class SecurityService:
                 security_id = security_id,
                 last_updated = utc_timestamp
             )
+            # cache so user can get latest price
             self.security_dao.update_security_prices([asdict(result)])
             return result
         else:

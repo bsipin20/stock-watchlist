@@ -79,7 +79,9 @@ class AlbertStockClient(BaseStockClient):
 
     def get_stock_prices_by_tickers(self, tickers):
         retries = 0
-        if len(tickers) > 1:
+        if len(tickers) == 0:
+            return False
+        elif len(tickers) > 1:
             ticker_string = ','.join(tickers)
         else:
             logging.info(tickers)
@@ -95,7 +97,7 @@ class AlbertStockClient(BaseStockClient):
             retries += 1
             time.sleep(self.retry_delay)
         print("Max retries exceeded. Unable to get stock prices by tickers.")
-        return None
+        return False
 
 def get_stock_client(resource_uri, api_key, environment):
     if environment == 'development':

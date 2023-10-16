@@ -34,7 +34,7 @@ def search_securities():
     try:
         search_request.validate()
     except ValueError as e:
-        return jsonify({'error': str(e)}), 422
+        return jsonify({'error': "Query must be at least 3 characters"}), 422
 
     try:
         service = create_security_service()

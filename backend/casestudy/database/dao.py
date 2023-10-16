@@ -46,6 +46,10 @@ class SecurityDao:
     def __init__(self, db, redis_client):
         self.db = db
         self.redis_client = redis_client
+    
+    def get_security_id_ticker_lookup(self):
+        existing_security_names = dict([(key, value) for key, value in self.db.session.query(Security.ticker, Security.name).all()])
+        return existing_security_names
 
     def get_security_by_id(self, security_id):
         security = self.db.session.query(Security).filter_by(id=security_id).first()

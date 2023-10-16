@@ -9,6 +9,7 @@ from celery import Celery, Task
 from casestudy import database
 from casestudy.extensions import db, migrate, redis_client
 from casestudy import config
+from casestudy.seed import add_users
 from casestudy.api import routes
 
 
@@ -26,6 +27,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     redis_client.init_app(app)
     celery_init_app(app)
+    app.cli.add_command(add_users)
     return None
 
 def celery_init_app(app) -> Celery:

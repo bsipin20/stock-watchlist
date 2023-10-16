@@ -6,7 +6,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     hostname: web
-    command: python3 backend/manage.py --debug
+    command: python3 backend/manage.py run --debug
     volumes:
       - ".:/app:delegated"
     ports:
