@@ -6,13 +6,9 @@ up:
 sh:
 	docker compose run web sh
 
-migrate-init:
-	docker compose run web flask db init
-
 migrate:
+	docker compose run web flask db init
 	docker compose run web flask db	migrate
-
-migrate-upgrade:
 	docker compose run web flask db upgrade
 
 submit: ## Dump the Postgres database and package your project into a solution.zip file you can submit
