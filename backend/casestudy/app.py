@@ -25,7 +25,6 @@ def register_extensions(app):
     migrate.init_app(app, db)
     redis_client.init_app(app)
     celery_init_app(app)
-    app.cli.add_command(add_users)
     return None
 
 def celery_init_app(app) -> Celery:
