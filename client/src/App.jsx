@@ -159,6 +159,13 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
   const userContextValue = useMemo(() => ({ user, login, logout }), [user, login, logout]);
 
   return (
