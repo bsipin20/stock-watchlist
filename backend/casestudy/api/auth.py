@@ -6,6 +6,10 @@ from casestudy.extensions import db
 from casestudy.database.models import User
 
 def login():
+    """
+    this is a basic hacky auth, the majority of the focus was on the app logic
+    the user can create the user by passing in a username
+    """
     data = request.get_json()
     username = data.get('username')
     user = User.query.filter_by(username=username).first()

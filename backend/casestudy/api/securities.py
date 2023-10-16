@@ -1,3 +1,9 @@
+"""
+Module: securities.py
+
+This module defines the methods related to securities
+"""
+
 import logging
 import sys
 from datetime import datetime
@@ -10,25 +16,62 @@ from casestudy.services.security_service import create_security_service
 
 @dataclass
 class SearchRequest:
+    """
+    Represents a search request with a query.
+
+    Attributes:
+    query (str): The search query string for the securities table.
+    """
     query: str
 
     def validate(self):
+        """
+        Validates the search request.
+
+        Raises:
+        ValueError: If the query is less than 3 characters long.
+        """
         if len(self.query) < 3:
             raise ValueError("Query must be at least 3 characters long")
 
 @dataclass
 class Security:
+    """
+    Represents security information.
+
+    Attributes:
+    id (int): The unique identifier for the security.
+    ticker (str): The ticker symbol of the security.
+    name (str): The name of the security.
+    """
     id: int
     ticker: str
     name: str
 
 @dataclass
 class SearchSecurityResponse:
+    """
+    Represents the response for a security search.
+
+    Attributes:
+    results (Optional[List[Security]]): List of security objects matching the search.
+    success (bool): Indicates if the search was successful.
+    error (Optional[str]): Error message in case of an error.
+    """
     results: Optional[List[Security]]
     success: bool
     error: Optional[str]
 
 def search_securities():
+    """
+    Searches for securities based on the provided query.
+
+    Returns:
+    JSON response: A JSON response containing the search results.
+
+    Raises:
+    ValueError: If there is a validation error.
+    """
     query = request.args.get('query', '')
     search_request = SearchRequest(query)
     try:
@@ -46,11 +89,6 @@ def search_securities():
         response = SearchSecurityResponse(results=security_objects, success=True, error=None)
         return jsonify(response), 200
     except (ValueError, TypeError, AttributeError) as e:
+        """ if the data from the api client changed typed or something """
         logging.error(f'Error searching securities: {str(e)}')
         return jsonify({'error': "server error"}), 500
-
-
-def get_security_info(securityId):
-    service = create_security_service()
-    security_info = service.get_security_info(securityId)
-    return jsonify(security_info), 200

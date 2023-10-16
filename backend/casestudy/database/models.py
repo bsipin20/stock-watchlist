@@ -21,8 +21,8 @@ class Security(db.Model):
 class Watchlist(db.Model):
     """Model for a watchlist entry"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    security_id = db.Column(db.Integer, db.ForeignKey('security.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    security_id = db.Column(db.Integer, db.ForeignKey('security.id'), nullable=False, index=True)
 
     def __repr__(self):
         return f'<Watchlist {self.id}: User {self.user_id} - Security {self.security_id}>'

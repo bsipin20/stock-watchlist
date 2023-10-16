@@ -27,7 +27,7 @@ function SearchResultStock(props) {
 
   return (
     <div className='stock'>
-      <h3>Sym: {props.ticker} Stock: {props.name}</h3>
+      <h3>Ticker: {props.ticker}: {props.name} </h3>
       <button onClick={updateWatchlist}>Add to watchlist</button>  
     </div>
   )
@@ -100,7 +100,7 @@ function Search({fetchWatchlist}) {
       ? searchResults["results"]
       .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
       .map((stock, index) => (
-        <SearchResultStock key={stock.id} fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} ticker={stock.ticker} id={stock.id} /> 
+        <SearchResultStock key={stock.id} fetchWatchlist={fetchWatchlist} onRemoveTickerFromSearchResults= {onRemoveTickerFromSearchResults} name = {stock.name} ticker={stock.ticker} id={stock.id} /> 
       )) : <p>Empty search</p>}
           <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
     <span>Page {currentPage}</span>
