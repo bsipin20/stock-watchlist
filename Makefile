@@ -11,6 +11,8 @@ migrate-init:
 
 migrate:
 	docker compose run web flask db	migrate
+
+migrate-upgrade:
 	docker compose run web flask db upgrade
 
 submit: ## Dump the Postgres database and package your project into a solution.zip file you can submit
@@ -18,9 +20,6 @@ submit: ## Dump the Postgres database and package your project into a solution.z
 
 build:
 	docker compose build web --no-cache
-
-migrate:
-	docker compose run 
 
 open-app: ## Open the React app
 	open http://localhost:3000
