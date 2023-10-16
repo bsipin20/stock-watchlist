@@ -9,9 +9,7 @@ from celery import Celery, Task
 from casestudy import database
 from casestudy.extensions import db, migrate, redis_client
 from casestudy import config
-from casestudy.seed import add_users
 from casestudy.api import routes
-
 
 def create_app(config_object=config.Config):
     app = Flask(__name__.split('.')[0])
