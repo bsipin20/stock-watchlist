@@ -11,7 +11,7 @@ export function User() {
       <h3>
         Welcome, {
           (user.username)
-            ? `${user.name}` 
+            ? `${user.first_name} ${user.last_name}` 
             : user.email
         }!
       </h3>
