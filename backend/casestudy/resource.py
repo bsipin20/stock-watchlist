@@ -7,6 +7,7 @@ import requests
 import json
 import time
 from abc import ABCMeta, abstractmethod
+
 class BaseStockClient:
     HEADER = None
     def __init__(self, base_resource, api_key, max_retries=3, retry_delay = 1):
@@ -44,7 +45,7 @@ class BaseStockClient:
         """
         raise NotImplementedError
 
-class TestAlbertStockClient(BaseStockClient):
+class TestStockClient(BaseStockClient):
     STOCKS = {
             "AAPL": 'Apple',
             "MSFT": 'Microsoft',
@@ -63,8 +64,8 @@ class TestAlbertStockClient(BaseStockClient):
         logging.info(f'result: {result}')
         return result
 
-class AlbertStockClient(BaseStockClient):
-    HEADER = "Albert-Case-Study-API-Key"
+class StockClient(BaseStockClient):
+    HEADER = "API-Key"
 
     def get_all_stocks(self):
         retries = 0
@@ -101,11 +102,11 @@ class AlbertStockClient(BaseStockClient):
 
 def get_stock_client(resource_uri, api_key, environment):
     if environment == 'development':
-        return AlbertStockClient(resource_uri, api_key)
+        return StockClient(resource_uri, api_key)
     elif environment == 'local':
-        return TestAlbertStockClient("test", "test_key")
+        return TestStockClient("test", "test_key")
 
 if __name__ == "__main__":
-    client = get_stock_client("https://app.albert.com", "d2db5753-33f6-4e25-b915-6cbdda7953e7", 'development')
+    client = get_stock_client("https://app.stock-api.com", "d2db5753-33f6-4e25-b915-6cbdda7953e7", 'development')
     result = client.get_stock_prices_by_tickers(['AAPL', 'AMZN'])
     print(result)
